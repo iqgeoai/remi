@@ -188,6 +188,68 @@ public final class GameEngine {
     }
     return null;
   }
-  private static ActionResult applyDiscard(GameState s, Action.Discard a)             { throw new UnsupportedOperationException(); }
+  private static ActionResult applyDiscard(GameState s, Action.Discard a) {
+    if (s.phase() != Phase.ACTION && s.phase() != Phase.DISCARD)
+      return reject(RejectReason.WRONG_PHASE, "Nu poți arunca acum.");
+    Player p = s.players().get(s.current());
+    if (p.mustUsePieceId() != null && p.mustUsePieceId() == a.pieceId())
+      return reject(RejectReason.MUST_USE_TAKEN_PIECE, "Trebuie să folosești piesa luată din șir.");
+    if (p.mustUsePieceId() != null && p.hand().stream().anyMatch(piece -> piece.id() == p.mustUsePieceId()))
+      return reject(RejectReason.MUST_USE_TAKEN_PIECE, "Trebuie să folosești piesa luată din șir.");
+
+    int idx = -1;
+    for (int i = 0; i < p.hand().size(); i++) if (p.hand().get(i).id() == a.pieceId()) { idx = i; break; }
+    if (idx < 0) return reject(RejectReason.PIECE_NOT_IN_HAND, "Piesă inexistentă în mână.");
+
+    var newHand = new java.util.ArrayList<>(p.hand());
+    Piece discarded = newHand.remove(idx);
+    var newDiscard = new java.util.ArrayList<>(s.discard()); newDiscard.add(discarded);
+
+    boolean announce = p.announced() || newHand.size() <= 3;
+    var newPlayer = new Player(p.name(), p.isBot(), newHand, p.hasEtalat(), p.calledAtu(), announce, null);
+    var newPlayers = new java.util.ArrayList<>(s.players()); newPlayers.set(s.current(), newPlayer);
+
+    GameState afterDiscard = new GameState(s.id(), newPlayers, s.stock(), newDiscard, s.atu(), s.melds(),
+        s.current(), s.phase(), s.drewFrom(), s.turnTaken(), s.round(), s.mode(), s.difficulty(),
+        s.doubleGame(), s.closed(), s.totals(), s.seed());
+
+    java.util.List<DomainEvent> evts = new java.util.ArrayList<>();
+    evts.add(new DomainEvent.PieceDiscarded(s.current(), discarded.id()));
+
+    // Round-end checks
+    if (newHand.isEmpty() && p.hasEtalat()) {
+      return closeRound(afterDiscard, s.current(), null, evts);
+    }
+    if (newHand.size() == 1 && p.hasEtalat()) {
+      return closeRound(afterDiscard, s.current(), newHand.get(0), evts);
+    }
+    if (afterDiscard.stock().isEmpty()) {
+      return endRoundStockEmpty(afterDiscard, evts);
+    }
+    // Advance turn
+    int next = (s.current() + 1) % s.players().size();
+    GameState ns = new GameState(afterDiscard.id(), afterDiscard.players(), afterDiscard.stock(),
+        afterDiscard.discard(), afterDiscard.atu(), afterDiscard.melds(),
+        next, Phase.DRAW, null, s.turnTaken() + 1, s.round(), s.mode(), s.difficulty(),
+        s.doubleGame(), false, s.totals(), s.seed());
+    evts.add(new DomainEvent.TurnStarted(next));
+    return new ActionResult.Accepted(ns, evts);
+  }
+
+  private static ActionResult closeRound(GameState s, int closerIdx, Piece lastDiscarded, java.util.List<DomainEvent> evts) {
+    java.util.List<RoundResult> results = Scoring.closeRound(s, closerIdx, lastDiscarded);
+    var newTotals = new java.util.ArrayList<>(s.totals());
+    for (RoundResult r : results) newTotals.set(r.playerIdx(), newTotals.get(r.playerIdx()) + r.base());
+    GameState ns = new GameState(s.id(), s.players(), s.stock(), s.discard(), s.atu(), s.melds(),
+        s.current(), s.phase(), s.drewFrom(), s.turnTaken(), s.round(), s.mode(), s.difficulty(),
+        s.doubleGame(), true, newTotals, s.seed());
+    evts.add(new DomainEvent.RoundClosed(closerIdx, results, lastDiscarded != null && lastDiscarded.isJoker()));
+    return new ActionResult.Accepted(ns, evts);
+  }
+
+  private static ActionResult endRoundStockEmpty(GameState s, java.util.List<DomainEvent> evts) {
+    evts.add(new DomainEvent.StockExhausted());
+    return closeRound(s, s.current(), null, evts);
+  }
   private static ActionResult applyForceAuto(GameState s, Action.ForceAutoAction a)   { throw new UnsupportedOperationException(); }
 }
