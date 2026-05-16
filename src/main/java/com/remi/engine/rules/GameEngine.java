@@ -132,7 +132,62 @@ public final class GameEngine {
         s.doubleGame(), s.closed(), s.totals(), s.seed());
     return accept(ns, new DomainEvent.PlayerEtalat(s.current(), totalPts));
   }
-  private static ActionResult applyLayoff(GameState s, Action.Layoff a)               { throw new UnsupportedOperationException(); }
+  private static ActionResult applyLayoff(GameState s, Action.Layoff a) {
+    if (s.phase() != Phase.ACTION && s.phase() != Phase.DISCARD)
+      return reject(RejectReason.WRONG_PHASE, "Nu poți lipi acum.");
+    Player p = s.players().get(s.current());
+    if (!p.hasEtalat()) return reject(RejectReason.NOT_ETALAT, "Trebuie să fii etalat.");
+
+    java.util.Map<Integer, Piece> handIdx = new java.util.HashMap<>();
+    for (Piece piece : p.hand()) handIdx.put(piece.id(), piece);
+
+    java.util.List<Meld> meldsCopy = new java.util.ArrayList<>(s.melds());
+    java.util.Set<Integer> placedIds = new java.util.HashSet<>();
+
+    for (LayoffProposal lo : a.layoffs()) {
+      Piece piece = handIdx.get(lo.pieceId());
+      if (piece == null || placedIds.contains(lo.pieceId()))
+        return reject(RejectReason.PIECE_NOT_IN_HAND, "Piesă inexistentă.");
+      if (lo.meldIdx() < 0 || lo.meldIdx() >= meldsCopy.size())
+        return reject(RejectReason.INVALID_LAYOFF, "Combinație inexistentă.");
+      Meld target = meldsCopy.get(lo.meldIdx());
+      Meld inserted = tryInsertIntoMeld(target, piece, s.current());
+      if (inserted == null) return reject(RejectReason.INVALID_LAYOFF, "Piesa nu se potrivește.");
+      meldsCopy.set(lo.meldIdx(), inserted);
+      placedIds.add(lo.pieceId());
+    }
+
+    var newHand = new java.util.ArrayList<>(p.hand());
+    newHand.removeIf(piece -> placedIds.contains(piece.id()));
+    Integer newMustUse = p.mustUsePieceId();
+    if (newMustUse != null && placedIds.contains(newMustUse)) newMustUse = null;
+
+    var newPlayer = new Player(p.name(), p.isBot(), newHand, p.hasEtalat(), p.calledAtu(), p.announced(), newMustUse);
+    var newPlayers = new java.util.ArrayList<>(s.players()); newPlayers.set(s.current(), newPlayer);
+
+    GameState ns = new GameState(s.id(), newPlayers, s.stock(), s.discard(), s.atu(), meldsCopy,
+        s.current(), s.phase(), s.drewFrom(), s.turnTaken(), s.round(), s.mode(), s.difficulty(),
+        s.doubleGame(), s.closed(), s.totals(), s.seed());
+
+    java.util.List<DomainEvent> evts = new java.util.ArrayList<>();
+    for (LayoffProposal lo : a.layoffs())
+      evts.add(new DomainEvent.LayoffPlayed(s.current(), lo.meldIdx(), lo.pieceId()));
+    return new ActionResult.Accepted(ns, evts);
+  }
+
+  private static Meld tryInsertIntoMeld(Meld meld, Piece piece, int playerIdx) {
+    for (int pos = 0; pos <= meld.pieces().size(); pos++) {
+      var trial = new java.util.ArrayList<>(meld.pieces());
+      trial.add(pos, piece);
+      Meld candidate = new Meld(meld.owner(), meld.type(), trial, meld.placedBy());
+      if (MeldValidator.isValid(candidate)) {
+        var newPlacedBy = new java.util.HashMap<>(meld.placedBy());
+        newPlacedBy.put(piece.id(), playerIdx);
+        return new Meld(meld.owner(), meld.type(), trial, newPlacedBy);
+      }
+    }
+    return null;
+  }
   private static ActionResult applyDiscard(GameState s, Action.Discard a)             { throw new UnsupportedOperationException(); }
   private static ActionResult applyForceAuto(GameState s, Action.ForceAutoAction a)   { throw new UnsupportedOperationException(); }
 }
