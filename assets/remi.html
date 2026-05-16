@@ -1,0 +1,3140 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+<meta name="theme-color" content="#1a0f08">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Remi">
+<link rel="manifest" href="data:application/json;base64,ewogICJuYW1lIjogIlJlbWkgRXRhbGF0IiwKICAic2hvcnRfbmFtZSI6ICJSZW1pIiwKICAic3RhcnRfdXJsIjogIi4iLAogICJkaXNwbGF5IjogInN0YW5kYWxvbmUiLAogICJiYWNrZ3JvdW5kX2NvbG9yIjogIiMxYTBmMDgiLAogICJ0aGVtZV9jb2xvciI6ICIjMWEwZjA4IiwKICAib3JpZW50YXRpb24iOiAicG9ydHJhaXQiCn0=">
+<title>Remi Etalat</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body {
+    margin: 0; padding: 0;
+    font-family: 'Inter', system-ui, sans-serif;
+    background: #1a0f08;
+    color: #f4e8d0;
+    overflow: hidden;
+    height: 100dvh;
+    user-select: none;
+    -webkit-user-select: none;
+    overscroll-behavior: none;
+  }
+  body {
+    background:
+      radial-gradient(ellipse at top, #3d2817 0%, #1a0f08 60%),
+      #1a0f08;
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+    display: flex;
+    flex-direction: column;
+    height: 100dvh;
+  }
+
+  /* ---------- HEADER ---------- */
+  .top {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 16px;
+    background: linear-gradient(180deg, rgba(0,0,0,0.4), transparent);
+    flex-shrink: 0;
+  }
+  .logo {
+    font-family: 'Playfair Display', serif;
+    font-weight: 900;
+    font-size: 22px;
+    letter-spacing: 0.02em;
+    background: linear-gradient(180deg, #f4d57b, #c8923c);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .btn-icon {
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.1);
+    color: #f4e8d0;
+    width: 36px; height: 36px;
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    font-size: 18px;
+  }
+  .btn-icon:active { transform: scale(0.95); }
+
+  /* ---------- OPPONENTS BAR ---------- */
+  .opponents {
+    display: flex; gap: 8px; padding: 8px 12px;
+    overflow-x: auto;
+    flex-shrink: 0;
+  }
+  .opp {
+    flex: 1;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 12px;
+    padding: 8px 10px;
+    min-width: 0;
+  }
+  .opp.active { border-color: #d4a443; box-shadow: 0 0 0 2px rgba(212,164,67,0.2); }
+  .opp .name { font-size: 11px; opacity: 0.7; text-transform: uppercase; letter-spacing: 0.05em; }
+  .opp .stats { display: flex; justify-content: space-between; align-items: center; margin-top: 2px; }
+  .opp .pieces { font-size: 14px; font-weight: 600; }
+  .opp .score { font-family: 'Playfair Display', serif; font-size: 16px; font-weight: 700; color: #d4a443; }
+  .opp.etalat::after {
+    content: '●'; color: #6cbf6c; margin-left: 4px; font-size: 10px;
+  }
+
+  /* ---------- TABLE (melds) ---------- */
+  .table-area {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 8px 12px;
+    background: linear-gradient(180deg, rgba(0,0,0,0.2), rgba(0,0,0,0.05));
+    border-top: 1px solid rgba(255,255,255,0.06);
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    transition: all 0.15s;
+  }
+  .table-area.drop-target-table {
+    background: linear-gradient(180deg, rgba(108,191,108,0.15), rgba(108,191,108,0.05));
+    box-shadow: inset 0 0 0 2px rgba(108,191,108,0.5);
+  }
+  .melds {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: flex-start;
+  }
+  .meld-column {
+    flex: 1;
+    min-width: 140px;
+    max-width: 240px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 6px 6px 8px;
+    border-radius: 10px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.07);
+  }
+  .meld-column.mine {
+    background: rgba(212,164,67,0.08);
+    border-color: rgba(212,164,67,0.3);
+  }
+  .meld-column-header {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #d4a443;
+    padding: 2px 4px 4px;
+    border-bottom: 1px dashed rgba(212,164,67,0.25);
+    margin-bottom: 2px;
+  }
+  .meld-column.mine .meld-column-header { color: #f4d57b; }
+  .meld-row {
+    display: flex; flex-wrap: wrap; gap: 3px;
+    padding: 4px;
+    border-radius: 8px;
+    background: rgba(0,0,0,0.2);
+    border: 1px dashed rgba(255,255,255,0.06);
+    align-items: center;
+    transition: all 0.15s;
+  }
+  .meld-row.target {
+    border: 2px dashed #6cbf6c;
+    background: rgba(108,191,108,0.15);
+    box-shadow: 0 0 12px rgba(108,191,108,0.4);
+    transform: scale(1.02);
+  }
+  .meld-row.target-invalid {
+    border: 2px dashed #c64545;
+    background: rgba(198,69,69,0.1);
+  }
+  .meld-row.fit {
+    border-color: rgba(108,191,108,0.5);
+    background: rgba(108,191,108,0.06);
+  }
+  .meld-row.nofit { opacity: 0.4; }
+  .meld-owner {
+    font-size: 9px; opacity: 0.5; padding: 0 4px; text-transform: uppercase; letter-spacing: 0.05em;
+  }
+  .empty-table {
+    text-align: center; opacity: 0.4; padding: 30px 12px; font-style: italic; font-size: 13px;
+  }
+
+  /* ---------- DISCARD & STOCK ---------- */
+  .center-zone {
+    display: flex; gap: 8px; padding: 6px 10px;
+    align-items: stretch;
+    flex-shrink: 0;
+    background: rgba(0,0,0,0.25);
+  }
+  .pile {
+    text-align: center;
+    display: flex; flex-direction: column; align-items: center;
+  }
+  .pile-side { flex-shrink: 0; }
+  .pile-label { font-size: 9px; opacity: 0.5; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 4px; }
+  .stock-back {
+    width: 42px; height: 58px;
+    border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    position: relative;
+    background: linear-gradient(135deg, #5a3a1a, #3d2410);
+    border: 1px solid #2a1808;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.1);
+    color: #d4a443;
+    font-family: 'Playfair Display', serif;
+    font-weight: 900;
+    font-size: 11px;
+    transition: all 0.2s;
+  }
+  .stock-back.active {
+    box-shadow: 0 0 0 2px #d4a443, 0 0 16px rgba(212,164,67,0.5), inset 0 1px 0 rgba(255,255,255,0.2);
+    animation: pulseGold 1.6s ease-in-out infinite;
+  }
+  @keyframes pulseGold {
+    0%, 100% { box-shadow: 0 0 0 2px #d4a443, 0 0 12px rgba(212,164,67,0.4), inset 0 1px 0 rgba(255,255,255,0.2); }
+    50% { box-shadow: 0 0 0 2px #f4d57b, 0 0 24px rgba(244,213,123,0.7), inset 0 1px 0 rgba(255,255,255,0.3); }
+  }
+  .stock-back:active { transform: scale(0.95); }
+  .stock-count { font-size: 10px; opacity: 0.6; margin-top: 2px; }
+  .atu-pile { display: flex; flex-direction: column; align-items: center; }
+
+  .discard-strip-wrap {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+  .discard-strip {
+    display: flex;
+    gap: 2px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    height: 58px;
+    padding: 2px;
+    background: rgba(0,0,0,0.3);
+    border-radius: 6px;
+    border: 1px dashed rgba(255,255,255,0.15);
+    align-items: center;
+    transition: all 0.15s;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+  }
+  .discard-strip::-webkit-scrollbar { height: 4px; }
+  .discard-strip::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 2px; }
+  .discard-strip.drop-target {
+    background: rgba(198,69,69,0.25);
+    border: 2px dashed #c64545;
+    box-shadow: 0 0 12px rgba(198,69,69,0.4);
+  }
+  .discard-strip.empty {
+    align-items: center;
+    justify-content: center;
+  }
+  .discard-strip.empty::before {
+    content: 'fără piese aruncate';
+    font-size: 11px; opacity: 0.4; font-style: italic;
+  }
+  .discard-piece {
+    position: relative;
+    flex-shrink: 0;
+    transition: transform 0.15s, box-shadow 0.15s;
+  }
+  .discard-piece.takeable {
+    cursor: pointer;
+  }
+  .discard-piece.takeable:active {
+    transform: translateY(-3px);
+  }
+  .discard-piece.takeable::after {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    border: 1.5px solid rgba(212,164,67,0.5);
+    border-radius: 7px;
+    pointer-events: none;
+  }
+  .discard-piece.first {
+    opacity: 0.55;
+    transform: rotate(180deg);
+  }
+  .discard-piece.first::after { display: none; }
+
+  /* ---------- HAND ---------- */
+  .hand-zone {
+    flex-shrink: 0;
+    background: linear-gradient(180deg, transparent, rgba(0,0,0,0.4));
+    padding: 8px 8px 4px;
+  }
+  .you-info {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 0 8px 6px;
+    font-size: 12px;
+  }
+  .you-name { font-weight: 600; }
+  .turn-timer {
+    display: inline-block;
+    margin-left: 8px;
+    font-family: 'Inter', monospace;
+    font-size: 11px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    padding: 2px 7px;
+    border-radius: 10px;
+    background: rgba(108,191,108,0.18);
+    color: #6cbf6c;
+    border: 1px solid rgba(108,191,108,0.4);
+    transition: all 0.2s;
+    min-width: 38px;
+    text-align: center;
+  }
+  .turn-timer:empty { display: none; }
+  .turn-timer.warn {
+    background: rgba(244,213,123,0.18);
+    color: #f4d57b;
+    border-color: rgba(244,213,123,0.4);
+  }
+  .turn-timer.crit {
+    background: rgba(198,69,69,0.25);
+    color: #ff8080;
+    border-color: rgba(198,69,69,0.6);
+    animation: timerPulse 0.6s ease-in-out infinite;
+  }
+  @keyframes timerPulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.08); }
+  }
+  .you-score { font-family: 'Playfair Display', serif; color: #d4a443; font-weight: 700; }
+  .hand {
+    display: flex; flex-wrap: wrap; gap: 3px;
+    justify-content: center;
+    max-height: 140px;
+    overflow-y: auto;
+  }
+  .hand-group {
+    display: inline-flex;
+    gap: 2px;
+    padding: 4px 4px 4px 4px;
+    background: rgba(212,164,67,0.12);
+    border: 1.5px dashed rgba(212,164,67,0.4);
+    border-radius: 8px;
+    position: relative;
+    cursor: grab;
+    align-items: center;
+    transition: all 0.15s;
+  }
+  .hand-group.valid {
+    background: rgba(108,191,108,0.18);
+    border: 2px solid #6cbf6c;
+    box-shadow: 0 0 8px rgba(108,191,108,0.3);
+  }
+  .group-break {
+    background: rgba(0,0,0,0.5);
+    color: #f4e8d0;
+    border: none;
+    border-radius: 50%;
+    width: 18px; height: 18px;
+    font-size: 10px;
+    cursor: pointer;
+    margin-left: 2px;
+    padding: 0;
+    display: flex; align-items: center; justify-content: center;
+    line-height: 1;
+  }
+  .group-break:active { background: rgba(0,0,0,0.8); }
+  .group-pts {
+    font-size: 10px;
+    font-weight: 700;
+    color: #6cbf6c;
+    background: rgba(0,0,0,0.4);
+    padding: 2px 5px;
+    border-radius: 8px;
+    margin-left: 4px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ---------- PIECE ---------- */
+  .piece {
+    width: 36px; height: 50px;
+    border-radius: 5px;
+    background: linear-gradient(180deg, #faf4e6, #ede0c4);
+    box-shadow:
+      0 2px 3px rgba(0,0,0,0.4),
+      inset 0 1px 0 rgba(255,255,255,0.6),
+      inset 0 -2px 4px rgba(0,0,0,0.08);
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Playfair Display', serif;
+    font-weight: 900;
+    font-size: 22px;
+    cursor: pointer;
+    position: relative;
+    transition: transform 0.12s, box-shadow 0.12s;
+    flex-shrink: 0;
+  }
+  .piece.small {
+    width: 26px; height: 36px;
+    font-size: 15px;
+    border-radius: 4px;
+  }
+  .piece.selected {
+    transform: translateY(-8px);
+    box-shadow:
+      0 6px 10px rgba(212,164,67,0.5),
+      inset 0 1px 0 rgba(255,255,255,0.6);
+    outline: 2px solid #d4a443;
+  }
+  .piece.disabled { opacity: 0.5; }
+  .piece.red { color: #c0282d; }
+  .piece.yellow { color: #d4a000; }
+  .piece.blue { color: #1e5fa8; }
+  .piece.black { color: #1a1a1a; }
+  .piece.joker {
+    background: linear-gradient(135deg, #f9e7a5, #e8c46a);
+    color: #5a3a1a;
+    font-size: 18px;
+  }
+  .piece.joker::before {
+    content: '★';
+    font-size: 22px;
+  }
+  .piece.joker .num { display: none; }
+  .piece.replaced { opacity: 0.4; transform: rotate(180deg); }
+
+  /* ---------- ACTIONS ---------- */
+  .actions {
+    display: flex; gap: 6px; padding: 6px 8px 8px;
+    flex-shrink: 0;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .btn {
+    background: linear-gradient(180deg, #d4a443, #a8802f);
+    color: #1a0f08;
+    border: none;
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    letter-spacing: 0.02em;
+    flex: 1;
+    min-width: 0;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.3);
+  }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .btn:active:not(:disabled) { transform: translateY(1px); }
+  .btn.secondary {
+    background: rgba(255,255,255,0.08);
+    color: #f4e8d0;
+    border: 1px solid rgba(255,255,255,0.1);
+  }
+  .btn.danger {
+    background: linear-gradient(180deg, #c64545, #8a2828);
+    color: #fff;
+  }
+
+  /* ---------- MODAL ---------- */
+  .modal-bg {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.7);
+    backdrop-filter: blur(4px);
+    z-index: 100;
+    display: none;
+    align-items: center; justify-content: center;
+    padding: 16px;
+  }
+  .modal-bg.show { display: flex; }
+  .modal {
+    background: linear-gradient(180deg, #2a1808, #1a0f08);
+    border: 1px solid rgba(212,164,67,0.3);
+    border-radius: 18px;
+    padding: 24px 20px;
+    max-width: 420px;
+    width: 100%;
+    max-height: 90dvh;
+    overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+  }
+  .modal h2 {
+    font-family: 'Playfair Display', serif;
+    margin: 0 0 12px;
+    color: #d4a443;
+    font-size: 24px;
+    text-align: center;
+  }
+  .modal p { margin: 8px 0; font-size: 14px; line-height: 1.5; opacity: 0.9; }
+  .modal .row { display: flex; gap: 8px; margin-top: 16px; }
+  .modal .row .btn { flex: 1; }
+
+  /* ---------- TOAST ---------- */
+  .toast {
+    position: fixed;
+    bottom: calc(env(safe-area-inset-bottom) + 16px);
+    left: 50%; transform: translateX(-50%);
+    background: rgba(0,0,0,0.9);
+    color: #f4e8d0;
+    padding: 10px 18px;
+    border-radius: 24px;
+    font-size: 13px;
+    font-weight: 500;
+    border: 1px solid rgba(212,164,67,0.3);
+    z-index: 200;
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.25s;
+    max-width: 90vw; text-align: center;
+  }
+  .toast.show { opacity: 1; }
+
+  /* ---------- SCORES TABLE ---------- */
+  .scores { width: 100%; border-collapse: collapse; margin-top: 10px; }
+  .scores th, .scores td {
+    padding: 6px 8px; text-align: left; font-size: 13px;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+  }
+  .scores th { color: #d4a443; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; }
+  .scores .num { text-align: right; font-variant-numeric: tabular-nums; }
+  .scores .win { color: #6cbf6c; font-weight: 700; }
+
+  /* ---------- SETUP ---------- */
+  .setup-opt {
+    display: flex; gap: 6px; margin: 8px 0;
+  }
+  .setup-opt button {
+    flex: 1;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.1);
+    color: #f4e8d0;
+    border-radius: 10px;
+    padding: 10px;
+    font-size: 14px;
+    cursor: pointer;
+    font-weight: 600;
+  }
+  .setup-opt button.sel {
+    background: linear-gradient(180deg, #d4a443, #a8802f);
+    color: #1a0f08;
+    border-color: #d4a443;
+  }
+  .setup-label { font-size: 12px; opacity: 0.7; text-transform: uppercase; letter-spacing: 0.05em; margin-top: 14px; }
+  .setup-mode-info {
+    font-size: 12px;
+    opacity: 0.7;
+    padding: 6px 10px;
+    background: rgba(212,164,67,0.08);
+    border-left: 2px solid #d4a443;
+    border-radius: 4px;
+    margin-top: 6px;
+    font-style: italic;
+    line-height: 1.4;
+  }
+
+  .help-text {
+    font-size: 12px; opacity: 0.6; padding: 4px 12px; text-align: center;
+    flex-shrink: 0;
+  }
+  .help-text.warn { color: #f4d57b; opacity: 0.9; }
+</style>
+</head>
+<body>
+
+<div class="top">
+  <div class="logo">REMI</div>
+  <div style="display:flex; gap:6px;">
+    <button class="btn-icon" id="btnSound" title="Sunet">🔊</button>
+    <button class="btn-icon" id="btnRules" title="Reguli">?</button>
+    <button class="btn-icon" id="btnScore" title="Scor">≡</button>
+    <button class="btn-icon" id="btnNew" title="Joc nou">↻</button>
+  </div>
+</div>
+
+<div class="opponents" id="opponents"></div>
+
+<div class="table-area" id="tableArea">
+  <div class="empty-table" id="emptyHint">Nicio etalare încă. Trage o piesă apoi etalează când ai cel puțin 45 puncte și o suită.</div>
+  <div class="melds" id="melds"></div>
+</div>
+
+<div class="center-zone">
+  <div class="pile pile-side">
+    <div class="pile-label">Grămadă</div>
+    <div class="stock-back" id="stock">REMI</div>
+    <div class="stock-count" id="stockCount">106</div>
+  </div>
+  <div class="discard-strip-wrap">
+    <div class="pile-label">Aruncate <span id="discardCount" style="opacity:0.6;">0</span></div>
+    <div class="discard-strip" id="discardStrip"></div>
+  </div>
+  <div class="pile pile-side atu-pile">
+    <div class="pile-label">Atu</div>
+    <div id="atuSpot"></div>
+  </div>
+</div>
+
+<div class="help-text" id="helpText">Bine ai venit!</div>
+
+<div class="hand-zone">
+  <div class="you-info">
+    <span class="you-name">Tu <span class="turn-timer" id="turnTimer"></span></span>
+    <div style="display:flex; gap:8px; align-items:center;">
+      <button class="btn-icon" id="btnSort" title="Sortează automat" style="width:28px; height:28px; font-size:14px;">⇅</button>
+      <span class="you-score" id="youScore">0p</span>
+    </div>
+  </div>
+  <div class="hand" id="hand"></div>
+</div>
+
+<!-- ---------- MODALS ---------- -->
+<div class="modal-bg" id="modalSetup">
+  <div class="modal">
+    <h2>Remi</h2>
+    <div class="setup-label">Mod de joc</div>
+    <div class="setup-opt" id="optMode">
+      <button data-v="etalat" class="sel">Etalat</button>
+      <button data-v="tabla">Pe tablă</button>
+    </div>
+    <div class="setup-mode-info" id="modeInfo">Etalezi combinațiile pe masă pe măsură ce le formezi.</div>
+    <div class="setup-label">Număr de jucători</div>
+    <div class="setup-opt" id="optPlayers">
+      <button data-v="2">2</button>
+      <button data-v="3" class="sel">3</button>
+      <button data-v="4">4</button>
+    </div>
+    <div class="setup-label">Dificultate AI</div>
+    <div class="setup-opt" id="optDiff">
+      <button data-v="easy">Ușor</button>
+      <button data-v="med" class="sel">Mediu</button>
+      <button data-v="hard">Greu</button>
+    </div>
+    <div class="setup-label">Sunete</div>
+    <div class="setup-opt" id="optSound">
+      <button data-v="on" class="sel">Pornit</button>
+      <button data-v="off">Oprit</button>
+    </div>
+    <div class="row">
+      <button class="btn" id="btnStart">Începe</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="modalRules">
+  <div class="modal">
+    <h2>Reguli Remi Etalat</h2>
+    <p><strong>Set:</strong> 106 piese — 104 numerotate 1–13 în 4 culori (×2) + 2 Joker.</p>
+    <p><strong>Distribuție:</strong> Primul jucător 15 piese, restul 14. O piesă rămasă devine <em>Atu</em>.</p>
+    <p><strong>Tură:</strong> Tragi o piesă (din grămadă sau din șirul de aruncate, cu condiții), poți etala/lipi, apoi arunci o piesă.</p>
+    <p><strong>Prima etalare:</strong> minim 45 puncte și cel puțin o suită (excepție: o terță de 1).</p>
+    <p><strong>Combinații:</strong> Suită = 3+ piese consecutive aceeași culoare. Terță = 3-4 piese aceeași valoare, culori diferite.</p>
+    <p><strong>Joker:</strong> înlocuiește orice piesă. Înainte de etalare valorează cât piesa înlocuită. La final: 50p.</p>
+    <p><strong>1:</strong> 5p în 1-2-3, 10p în 12-13-1, 25p în terță de 1 sau rămas pe tablă.</p>
+    <p><strong>Anunț:</strong> obligatoriu când mai ai 3 piese. Altfel -500p.</p>
+    <p><strong>Închidere:</strong> +50p bonus. Cu Joker = punctaj dublu. Atu = 1 sau Joker → joc dublu pentru toți.</p>
+    <p><strong>Neetalat la închidere:</strong> -100p (sau -50p dacă ai anunțat Atu).</p>
+    <p style="border-top:1px solid rgba(255,255,255,0.1); padding-top:10px; margin-top:10px;"><strong>🎯 Remi pe tablă (variantă):</strong> nu cobori combinațiile pe masă. Le ții pe tabla ta și închizi când mâna ta e numai combinații (max 1 piesă liberă pentru închidere). Câștigătorul primește 250p de la fiecare (500p cu joc dublu).</p>
+    <p style="border-top:1px solid rgba(255,255,255,0.1); padding-top:10px; margin-top:14px;"><strong>⏱ Timer:</strong> ai 120 secunde pe tură. Dacă expiră, sistemul forțează automat o acțiune: tragere din grămadă sau aruncare a piesei de valoare maximă.</p>
+    <p style="border-top:1px solid rgba(255,255,255,0.1); padding-top:10px; margin-top:14px;"><strong>💡 Cum joci:</strong></p>
+    <p style="font-size:13px; margin:4px 0;">• <strong>Tragi piesă:</strong> atinge grămada (sclipește auriu) sau o piesă din șirul "Aruncate" (cele cu chenar auriu).</p>
+    <p style="font-size:13px; margin:4px 0;">• <strong>Rupe șirul:</strong> atinge orice piesă din șir (nu doar ultima). Condiții: ești etalat, ai ≥4 piese pe tablă, iar piesa trebuie folosită imediat în etalare/lipire. Piesele de deasupra ei se adaugă la mâna ta. Prima piesă (opener, întoarsă) nu se poate lua.</p>
+    <p style="font-size:13px; margin:4px 0;">• <strong>Formezi un grup în mână:</strong> ține apăsat pe o piesă și trag-o peste altă piesă. Pieselor adăugate la grup le poți pune și mai multe.</p>
+    <p style="font-size:13px; margin:4px 0;">• <strong>Grup valid:</strong> devine verde când e o combinație corectă. Atunci poți trage tot grupul pe masă pentru a-l etala.</p>
+    <p style="font-size:13px; margin:4px 0;">• <strong>Spargi un grup:</strong> butonul ✕ de pe grup.</p>
+    <p style="font-size:13px; margin:4px 0;">• <strong>Arunci o piesă:</strong> drag pe "Aruncate" (roșu).</p>
+    <p style="font-size:13px; margin:4px 0;">• <strong>Lipești:</strong> drag piesă peste o combinație de pe masă (verde dacă se potrivește).</p>
+    <p style="font-size:13px; margin:4px 0;">• <strong>Sortare automată:</strong> butonul <strong>⇅</strong>.</p>
+    <div class="row"><button class="btn" id="btnRulesClose">Am înțeles</button></div>
+  </div>
+</div>
+
+<div class="modal-bg" id="modalScore">
+  <div class="modal">
+    <h2>Scoruri</h2>
+    <div id="scoreContent"></div>
+    <div class="row"><button class="btn" id="btnScoreClose">Înapoi</button></div>
+  </div>
+</div>
+
+<div class="modal-bg" id="modalEnd">
+  <div class="modal">
+    <h2 id="endTitle">Sfârșit rundă</h2>
+    <div id="endContent"></div>
+    <div class="row">
+      <button class="btn secondary" id="btnEndNew">Joc nou</button>
+      <button class="btn" id="btnEndNext">Runda următoare</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="modalMeld">
+  <div class="modal">
+    <h2>Etalează combinații</h2>
+    <p style="font-size:12px;">Atinge piesele pentru a le adăuga la grupul curent. Folosește "Grup nou" pentru a începe altă combinație. La prima etalare ai nevoie de ≥45 puncte și cel puțin o suită.</p>
+    <div id="meldBuilder" style="margin: 10px 0;"></div>
+    <div style="font-size:12px; margin: 6px 0;">Piese disponibile:</div>
+    <div id="meldHand" class="hand" style="max-height: 200px;"></div>
+    <div style="display:flex; gap:6px; margin-top:10px;">
+      <button class="btn secondary" id="btnMeldNew">Grup nou</button>
+      <button class="btn secondary" id="btnMeldClear">Curăță</button>
+    </div>
+    <div class="row">
+      <button class="btn secondary" id="btnMeldCancel">Anulează</button>
+      <button class="btn" id="btnMeldConfirm">Confirmă</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="modalLay">
+  <div class="modal">
+    <h2>Lipește piese</h2>
+    <p style="font-size:12px;">Atinge o piesă din mână, apoi atinge o combinație de pe masă unde se potrivește.</p>
+    <div id="layMelds" style="margin: 10px 0; display:flex; flex-direction:column; gap:6px;"></div>
+    <div style="font-size:12px; margin: 6px 0;">Piese din mână:</div>
+    <div id="layHand" class="hand" style="max-height: 200px;"></div>
+    <div class="row">
+      <button class="btn secondary" id="btnLayCancel">Înapoi</button>
+      <button class="btn" id="btnLayDone">Gata</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* =========================================================
+   REMI ETALAT — Engine + AI + UI
+   Reguli pe baza CumSeJoacă.ro / ropet.ro / vipremi.ro
+   ========================================================= */
+
+/* ---------- DOMAIN MODEL ---------- */
+const COLORS = ['red','yellow','blue','black'];
+
+let PIECE_ID = 0;
+function makeDeck() {
+  const deck = [];
+  for (const c of COLORS) {
+    for (let s = 0; s < 2; s++) {
+      for (let n = 1; n <= 13; n++) {
+        deck.push({ id: PIECE_ID++, num: n, color: c, joker: false });
+      }
+    }
+  }
+  // 2 jokers
+  deck.push({ id: PIECE_ID++, num: 0, color: 'joker', joker: true });
+  deck.push({ id: PIECE_ID++, num: 0, color: 'joker', joker: true });
+  return deck;
+}
+
+function shuffle(a) {
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+/* ---------- POINT VALUES ---------- */
+// Final scoring of an etalat meld (after first meld in this round)
+function finalPieceValue(p) {
+  if (p.joker) return 50;
+  if (p.num === 1) return 25;
+  if (p.num >= 2 && p.num <= 9) return 5;
+  return 10; // 10..13
+}
+// Value during first-meld validation depending on position in the meld
+function firstMeldPieceValue(piece, meld) {
+  if (!piece.joker && piece.num >= 2 && piece.num <= 9) return 5;
+  if (!piece.joker && piece.num >= 10 && piece.num <= 13) return 10;
+  if (!piece.joker && piece.num === 1) {
+    if (meld.type === 'group') return 25;
+    // suite: depends on neighbors
+    const idx = meld.pieces.indexOf(piece);
+    // Find non-joker neighbor to decide
+    // If next piece is 2 -> low suite -> 5; if prev is 13 -> high suite -> 10
+    let nextNum = null, prevNum = null;
+    for (let i = idx + 1; i < meld.pieces.length; i++) {
+      if (!meld.pieces[i].joker) { nextNum = meld.pieces[i].num - (i - idx - 0); break; }
+    }
+    for (let i = idx - 1; i >= 0; i--) {
+      if (!meld.pieces[i].joker) { prevNum = meld.pieces[i].num + (idx - i - 0); break; }
+    }
+    // Actually we need to know if this 1 is acting as 1 (low) or as 14 (high)
+    // Determine by neighbor in sequence:
+    if (idx === 0) return 5; // 1,2,3...
+    if (idx === meld.pieces.length - 1) return 10; // ...12,13,1
+    return 5;
+  }
+  if (piece.joker) {
+    // Joker replaces the piece in that slot
+    if (meld.type === 'group') {
+      // group value = value of one of the matched pieces
+      const ref = meld.pieces.find(p => !p.joker);
+      if (ref) {
+        if (ref.num === 1) return 25;
+        if (ref.num >= 2 && ref.num <= 9) return 5;
+        return 10;
+      }
+      return 10;
+    } else {
+      // suite: figure out what number the joker represents
+      const repNum = inferJokerNumber(meld, piece);
+      if (repNum === 1) {
+        const idx = meld.pieces.indexOf(piece);
+        if (idx === 0) return 5;
+        return 10;
+      }
+      if (repNum >= 2 && repNum <= 9) return 5;
+      return 10;
+    }
+  }
+  return 0;
+}
+
+function inferJokerNumber(meld, jokerPiece) {
+  if (meld.type === 'group') {
+    const ref = meld.pieces.find(p => !p.joker);
+    return ref ? ref.num : 0;
+  }
+  // Suite: locate joker index and find a real anchor
+  const idx = meld.pieces.indexOf(jokerPiece);
+  for (let i = 0; i < meld.pieces.length; i++) {
+    if (!meld.pieces[i].joker) {
+      // anchor at i with num = meld.pieces[i].num
+      const diff = idx - i;
+      let n = meld.pieces[i].num + diff;
+      // Handle 13->1 wrap convention: if anchor is high and idx after 13, this 1 would be 14
+      // Our suites can be 12-13-1, treat as anchor + diff but clamp at 13 -> 1
+      if (n > 13) n = ((n - 1) % 13) + 1;
+      if (n < 1) n = 13 - (-n);
+      return n;
+    }
+  }
+  return 0;
+}
+
+/* ---------- MELD VALIDATION ---------- */
+// A meld is { type: 'group'|'suite', pieces: [piece...] }
+function isValidMeld(meld) {
+  if (!meld.pieces || meld.pieces.length < 3) return false;
+  const pieces = meld.pieces;
+  const jokerCount = pieces.filter(p => p.joker).length;
+  const realCount = pieces.length - jokerCount;
+  // "combination must contain at least double the number of normal pieces compared to jokers"
+  // Practical: at least 2 real pieces, and jokers <= reals - we use the common rule jokers <= reals
+  if (realCount < 2) return false;
+
+  if (meld.type === 'group') {
+    // Same number, different colors
+    const reals = pieces.filter(p => !p.joker);
+    const num = reals[0].num;
+    if (!reals.every(p => p.num === num)) return false;
+    const colors = new Set(reals.map(p => p.color));
+    if (colors.size !== reals.length) return false; // must be different colors
+    if (pieces.length > 4) return false; // max 4 colors
+    return true;
+  }
+  if (meld.type === 'suite') {
+    // Same color, consecutive numbers
+    const reals = pieces.filter(p => !p.joker);
+    const color = reals[0].color;
+    if (!reals.every(p => p.color === color)) return false;
+    // Determine the sequence: fit pieces into consecutive positions
+    // The slot of each real piece is its index in meld.pieces, the assumed number is base + index
+    // Solve: for each real piece at idx i with num n -> base candidate = n - i
+    // All real candidates must agree (modulo wrap 13->1)
+    let base = null;
+    for (let i = 0; i < pieces.length; i++) {
+      const p = pieces[i];
+      if (p.joker) continue;
+      let candidate = p.num - i;
+      if (base === null) base = candidate;
+      else if (candidate !== base) {
+        // Try wrap: e.g., 12,13,1 means 1 at position 2 with base 12 -> candidate = 1 - 2 = -1; expected 12
+        // Allow if (p.num + 13 - i) === base
+        if ((p.num + 13 - i) === base) continue;
+        if ((p.num - i) === base) continue;
+        return false;
+      }
+    }
+    if (base === null) return false;
+    // Each implied number must be 1..13 (allow wrap only 12,13,1)
+    const len = pieces.length;
+    if (len > 13) return false;
+    // Validate every position
+    for (let i = 0; i < len; i++) {
+      let n = base + i;
+      if (n > 13) {
+        // only allowed if entire segment that exceeds is just "1" wrap and ONLY length 3 piece special
+        // simplest: allow if n === 14 (acts as 1) but only when base + len - 1 === 14 and we don't go further
+        if (n === 14) continue;
+        return false;
+      }
+      if (n < 1) return false;
+    }
+    return true;
+  }
+  return false;
+}
+
+function meldPointValueFinal(meld) {
+  return meld.pieces.reduce((s, p) => s + finalPieceValue(p), 0);
+}
+function meldPointValueFirstMeld(meld) {
+  return meld.pieces.reduce((s, p) => s + firstMeldPieceValue(p, meld), 0);
+}
+
+/* ---------- SOUND SYSTEM ---------- */
+let audioCtx = null;
+let soundEnabled = true;
+
+function initAudio() {
+  if (audioCtx) return;
+  try {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  } catch (e) {
+    console.log('Audio not available');
+  }
+}
+
+function playTone(opts) {
+  if (!soundEnabled || !audioCtx) return;
+  if (audioCtx.state === 'suspended') {
+    audioCtx.resume().catch(() => {});
+  }
+  try {
+    const now = audioCtx.currentTime;
+    const o = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    o.type = opts.type || 'sine';
+    o.frequency.setValueAtTime(opts.freq || 440, now);
+    if (opts.freq2) {
+      o.frequency.linearRampToValueAtTime(opts.freq2, now + (opts.dur || 0.1));
+    }
+    const vol = opts.vol || 0.15;
+    g.gain.setValueAtTime(0, now);
+    g.gain.linearRampToValueAtTime(vol, now + 0.01);
+    g.gain.exponentialRampToValueAtTime(0.001, now + (opts.dur || 0.1));
+    o.connect(g);
+    g.connect(audioCtx.destination);
+    o.start(now);
+    o.stop(now + (opts.dur || 0.1) + 0.05);
+  } catch (e) {}
+}
+
+function playSequence(notes) {
+  if (!soundEnabled || !audioCtx) return;
+  let delay = 0;
+  for (const n of notes) {
+    setTimeout(() => playTone(n), delay);
+    delay += (n.gap || 80);
+  }
+}
+
+const SFX = {
+  draw: () => playTone({ freq: 440, freq2: 660, dur: 0.12, type: 'triangle', vol: 0.12 }),
+  pick: () => playTone({ freq: 700, freq2: 900, dur: 0.10, type: 'triangle', vol: 0.12 }),
+  discard: () => playTone({ freq: 300, freq2: 200, dur: 0.15, type: 'sine', vol: 0.12 }),
+  group: () => playTone({ freq: 600, freq2: 800, dur: 0.08, type: 'square', vol: 0.08 }),
+  groupBreak: () => playTone({ freq: 400, freq2: 200, dur: 0.10, type: 'sawtooth', vol: 0.08 }),
+  etalat: () => playSequence([
+    { freq: 523, dur: 0.10, type: 'triangle', vol: 0.14 },
+    { freq: 659, dur: 0.10, type: 'triangle', vol: 0.14, gap: 90 },
+    { freq: 784, dur: 0.18, type: 'triangle', vol: 0.16, gap: 90 }
+  ]),
+  layoff: () => playTone({ freq: 800, freq2: 1000, dur: 0.10, type: 'triangle', vol: 0.10 }),
+  invalid: () => playTone({ freq: 200, freq2: 150, dur: 0.18, type: 'sawtooth', vol: 0.10 }),
+  win: () => playSequence([
+    { freq: 523, dur: 0.12, type: 'triangle', vol: 0.16 },
+    { freq: 659, dur: 0.12, type: 'triangle', vol: 0.16, gap: 110 },
+    { freq: 784, dur: 0.12, type: 'triangle', vol: 0.16, gap: 110 },
+    { freq: 1047, dur: 0.30, type: 'triangle', vol: 0.18, gap: 110 }
+  ]),
+  lose: () => playSequence([
+    { freq: 400, dur: 0.15, type: 'sine', vol: 0.12 },
+    { freq: 350, dur: 0.15, type: 'sine', vol: 0.12, gap: 130 },
+    { freq: 280, dur: 0.30, type: 'sine', vol: 0.12, gap: 130 }
+  ]),
+  tick: () => playTone({ freq: 1200, dur: 0.04, type: 'sine', vol: 0.06 }),
+  tickWarn: () => playTone({ freq: 800, dur: 0.06, type: 'square', vol: 0.10 }),
+  timeout: () => playSequence([
+    { freq: 300, dur: 0.10, type: 'sawtooth', vol: 0.12 },
+    { freq: 200, dur: 0.20, type: 'sawtooth', vol: 0.12, gap: 100 }
+  ])
+};
+
+
+const state = {
+  players: [],     // [{name, isAI, hand:[], melds:[], hasEtalat, calledAtu, knownAtu, mustAnnounce}]
+  stock: [],
+  discard: [],
+  atu: null,       // piece selected as atu
+  doubleGame: false,
+  current: 0,
+  phase: 'draw',   // 'draw' | 'action' | 'discard'
+  drewFrom: null,  // 'stock' | 'discard'
+  melds: [],       // table melds {owner, type, pieces}
+  selected: [],    // selected piece ids in hand
+  closed: false,
+  round: 1,
+  totals: [],      // cumulative totals
+  difficulty: 'med',
+  numPlayers: 3,
+  mode: 'etalat', // 'etalat' or 'tabla'
+  turnTaken: 0,    // total turns this round (for "first turn" rules)
+  log: [],
+  handGroups: [], // For human player: array of {type:'piece',pieceId} or {type:'group',pieceIds:[...]}
+};
+function activeP() { return state.players[state.current]; }
+function youIndex() { return 0; }
+
+/* ---------- DEAL ---------- */
+function deal(numPlayers, difficulty, mode) {
+  PIECE_ID = 0;
+  const deck = shuffle(makeDeck());
+  state.players = [];
+  const youNames = ['Tu'];
+  const aiNames = ['Ana', 'Mihai', 'Elena', 'Radu', 'Sorin'];
+  shuffle(aiNames);
+  state.players.push({ name: 'Tu', isAI: false, hand: [], hasEtalat: false, calledAtu: false, score: 0, boardMelds: [] });
+  for (let i = 1; i < numPlayers; i++) {
+    state.players.push({ name: aiNames[i-1], isAI: true, hand: [], hasEtalat: false, calledAtu: false, score: 0, boardMelds: [] });
+  }
+  // First player gets 15, others 14
+  // Deal 14 to all first
+  for (let r = 0; r < 14; r++) {
+    for (const p of state.players) {
+      p.hand.push(deck.pop());
+    }
+  }
+  // First player gets one more
+  state.players[0].hand.push(deck.pop());
+  // Sort human player's initial hand for convenience (they can rearrange anytime)
+  state.players[0].hand.sort(sortPieces);
+  // Initialize hand grouping (1 group node per piece initially)
+  state.handGroups = state.players[0].hand.map(p => ({ type: 'piece', pieceId: p.id }));
+  // Atu — last piece is turned face up
+  state.atu = deck.pop();
+  state.stock = deck;
+  state.discard = [];
+  state.melds = [];
+  state.current = 0;
+  state.phase = 'discard'; // first player must discard before normal flow? per rules first player throws first
+  state.drewFrom = null;
+  state.selected = [];
+  state.closed = false;
+  state.doubleGame = (state.atu.joker || state.atu.num === 1);
+  state.difficulty = difficulty;
+  state.numPlayers = numPlayers;
+  state.mode = mode || 'etalat';
+  state.turnTaken = 0;
+
+  // Check who has atu match -> gets 50 bonus at end (calledAtu = true if they "announce" - in our auto version, we award if they hold a piece equal to atu on board at start)
+  for (const p of state.players) {
+    if (p.hand.some(h => sameValue(h, state.atu))) {
+      p.calledAtu = true;
+    }
+  }
+}
+
+function sameValue(a, b) {
+  if (a.joker && b.joker) return true;
+  if (a.joker || b.joker) return false;
+  return a.num === b.num && a.color === b.color;
+}
+
+/* ---------- TURN FLOW ---------- */
+/* ---------- TURN TIMER ---------- */
+const TURN_TIMER_SECONDS = 120;
+let turnTimerHandle = null;
+let turnTimerStartedAt = 0;
+let turnTimerTickHandle = null;
+
+function startTurnTimer() {
+  clearTurnTimer();
+  turnTimerStartedAt = Date.now();
+  // Tick every 250ms for smooth countdown
+  turnTimerTickHandle = setInterval(updateTimerDisplay, 250);
+  updateTimerDisplay();
+  turnTimerHandle = setTimeout(onTurnTimerExpired, TURN_TIMER_SECONDS * 1000);
+}
+
+function clearTurnTimer() {
+  if (turnTimerHandle) { clearTimeout(turnTimerHandle); turnTimerHandle = null; }
+  if (turnTimerTickHandle) { clearInterval(turnTimerTickHandle); turnTimerTickHandle = null; }
+  updateTimerDisplay();
+}
+
+function timerSecondsLeft() {
+  if (!turnTimerHandle) return null;
+  const elapsed = (Date.now() - turnTimerStartedAt) / 1000;
+  return Math.max(0, Math.ceil(TURN_TIMER_SECONDS - elapsed));
+}
+
+function updateTimerDisplay() {
+  const el = document.getElementById('turnTimer');
+  if (!el) return;
+  const left = timerSecondsLeft();
+  if (left === null) {
+    el.textContent = '';
+    el.className = 'turn-timer';
+    return;
+  }
+  el.textContent = left + 's';
+  const wasCrit = el.classList.contains('crit');
+  const wasWarn = el.classList.contains('warn');
+  el.classList.remove('warn', 'crit');
+  if (left <= 10) {
+    el.classList.add('crit');
+    // Play tick on each new critical second
+    if (!wasCrit || el.dataset.lastTick !== String(left)) {
+      el.dataset.lastTick = String(left);
+      if (wasCrit || left === 10) SFX.tickWarn();
+    }
+  } else if (left <= 30) {
+    el.classList.add('warn');
+    if (left === 30 && !wasWarn) SFX.tick();
+  }
+}
+
+function onTurnTimerExpired() {
+  clearTurnTimer();
+  if (state.current !== 0) return; // safety: AI turn
+  if (state.closed) return; // round already ended
+  SFX.timeout();
+  // Clear any active drag/ghost
+  try {
+    document.querySelectorAll('body > div').forEach(g => {
+      const cs = g.style && g.style.position;
+      if (cs === 'fixed' && (g.classList.contains('piece') || g.classList.contains('hand-group'))) {
+        g.remove();
+      }
+    });
+  } catch(_) {}
+  dragSrcNode = null;
+  if (typeof clearAllHints === 'function') clearAllHints();
+  try {
+    forceAutoAction();
+  } catch (err) {
+    console.error('forceAutoAction error:', err);
+    // Last-resort: force end of turn
+    try { endTurn(); } catch (_) {}
+  }
+}
+
+// When time runs out, force the player to act:
+// - If still in 'draw' phase: auto-draw from stock
+// - If in 'action' or 'discard' phase: auto-discard a piece
+function forceAutoAction() {
+  const p = state.players[0];
+  if (state.phase === 'draw') {
+    if (state.stock.length === 0) {
+      // Nothing to draw — just end the turn / round
+      endRoundStockEmpty();
+      return;
+    }
+    toast('Timpul a expirat — tragi automat din grămadă.', 2500);
+    drawFromStock();
+    // After drawing, give a 15s grace to discard
+    if (state.current === 0 && state.phase !== 'draw' && !state.closed) {
+      clearTurnTimer();
+      turnTimerStartedAt = Date.now() - (TURN_TIMER_SECONDS - 15) * 1000;
+      turnTimerHandle = setTimeout(onTurnTimerExpired, 15 * 1000);
+      turnTimerTickHandle = setInterval(updateTimerDisplay, 250);
+      updateTimerDisplay();
+      setTimeout(() => toast('Ai 15s să arunci o piesă.', 1800), 800);
+    }
+    return;
+  }
+  if (state.phase === 'action' || state.phase === 'discard') {
+    if (p.hand.length === 0) {
+      // Should not happen, but bail safely
+      endTurn();
+      return;
+    }
+    // Pick the piece to auto-discard:
+    // 1. Highest-value non-joker that isn't the must-use piece
+    // 2. If only the must-use piece is left (or only joker), force-discard anyway by clearing mustUse
+    let best = null;
+    for (const piece of p.hand) {
+      if (piece.joker) continue;
+      if (p.mustUseTakenPiece && piece.id === p.mustUseTakenPiece.id) continue;
+      if (!best || finalPieceValue(piece) > finalPieceValue(best)) best = piece;
+    }
+    // Fallback 1: include joker if no non-joker available
+    if (!best) {
+      for (const piece of p.hand) {
+        if (p.mustUseTakenPiece && piece.id === p.mustUseTakenPiece.id) continue;
+        if (!best || finalPieceValue(piece) > finalPieceValue(best)) best = piece;
+      }
+    }
+    // Fallback 2: if mustUse blocks everything, just take any piece (lose mustUse constraint)
+    if (!best) {
+      best = p.hand[0];
+      p.mustUseTakenPiece = null;
+    }
+    toast('Timpul a expirat — arunc automat o piesă.', 2500);
+    // Always clear mustUse to allow discard to go through
+    p.mustUseTakenPiece = null;
+    discardPiece(best.id, { force: true });
+    return;
+  }
+  // Unknown phase — just end turn
+  endTurn();
+}
+
+function startTurn() {
+  state.selected = [];
+  const p = activeP();
+  clearTurnTimer();
+  if (state.current === 0) {
+    // first player special case: on first turn, they just discard
+    if (state.turnTaken === 0) {
+      state.phase = 'discard';
+      state.drewFrom = 'stock'; // simulate they "have" a piece already (the 15th)
+      help('Aruncă o piesă pentru a începe.');
+    } else {
+      state.phase = 'draw';
+      help(`Rândul tău. Atinge grămada sau piesa aruncată.`);
+    }
+    startTurnTimer();
+  } else {
+    if (state.turnTaken === 0 && state.current === 0) {
+      // handled above
+    }
+    state.phase = 'draw';
+  }
+  render();
+  if (p.isAI) {
+    setTimeout(aiPlay, 700);
+  }
+}
+
+function endTurn() {
+  clearTurnTimer();
+  // Check announce penalty
+  const p = activeP();
+  if (p.hand.length <= 3 && !p.announced) {
+    p.announced = true;
+    if (!p.isAI) toast(`Ai mai puțin de 3 piese — anunțat automat.`);
+  }
+  // Check close
+  if (p.hand.length <= 1 && p.hasEtalat) {
+    closeRound(state.current, p.hand.length === 1 ? p.hand[0] : null);
+    return;
+  }
+  // Check stock empty
+  if (state.stock.length === 0) {
+    endRoundStockEmpty();
+    return;
+  }
+  state.current = (state.current + 1) % state.players.length;
+  state.turnTaken++;
+  startTurn();
+}
+
+/* ---------- ACTIONS ---------- */
+function drawFromStock() {
+  const p = activeP();
+  if (state.phase !== 'draw') return;
+  if (state.stock.length === 0) { endRoundStockEmpty(); return; }
+  const piece = state.stock.pop();
+  p.hand.push(piece);
+  state.drewFrom = 'stock';
+  state.phase = 'action';
+  if (state.current === 0) {
+    rebuildHandGroupsAfterChange();
+    SFX.draw();
+  }
+  if (!p.isAI) help('Formează grupuri în mână (drag peste altă piesă) → trage grupul pe masă.');
+  render();
+}
+
+// takeDiscard takes a piece from the discard pile.
+// idx is the position in state.discard. If omitted, takes the top (last).
+// Rules:
+//   - First piece (idx=0) cannot be taken (it's the "opener", placed face down/reversed)
+//   - To break the line (take a non-top piece): player must already be etalat,
+//     have >=4 pieces on board, and must use the taken piece in a meld/layoff this turn
+//   - If not etalat: can only take the top piece, and must use it to etalat this turn
+//   - With <=2 pieces on board: cannot break the line at all, only take top
+//   - With 3 pieces: only the top piece allowed
+//   - When breaking from middle, all pieces above (later than) the taken piece
+//     also go to the player's hand (they're "the rest of the broken row")
+function takeDiscard(idx) {
+  const p = activeP();
+  if (state.phase !== 'draw') return;
+  if (state.discard.length === 0) { toast('Nu este nicio piesă aruncată.'); return; }
+  // Default: take last (top)
+  if (idx === undefined || idx === null) idx = state.discard.length - 1;
+  if (idx < 0 || idx >= state.discard.length) return;
+  // Cannot take the first (opening) piece
+  if (idx === 0 && state.discard.length > 1) {
+    toast('Nu poți lua piesa de start a șirului.');
+    return;
+  }
+  const isTop = (idx === state.discard.length - 1);
+  // Hand-size restrictions on breaking
+  if (p.hand.length <= 2 && !isTop) {
+    toast('Cu 1-2 piese pe tablă nu mai poți rupe șirul; doar ultima.');
+    return;
+  }
+  if (p.hand.length === 3 && !isTop) {
+    toast('Cu 3 piese poți lua doar ultima piesă aruncată.');
+    return;
+  }
+  // Breaking from non-top requires being etalat and >=4 pieces on board
+  if (!isTop) {
+    if (!p.hasEtalat) {
+      toast('Trebuie să fii etalat ca să poți rupe șirul.');
+      return;
+    }
+    if (p.hand.length < 4) {
+      toast('Trebuie să ai cel puțin 4 piese pe tablă pentru a rupe șirul.');
+      return;
+    }
+  }
+  // Take piece(s): everything from idx to end goes to the player's hand;
+  // the piece AT idx is "the one taken" (must be used this turn).
+  // Pieces above it (state.discard[idx+1..end]) get added to hand but have no use-constraint
+  // (in many house rules they go to hand and the player picks what to keep / etalat)
+  // For simplicity: the piece at idx is mustUseTakenPiece; the others above it are just added.
+  const taken = state.discard.splice(idx, state.discard.length - idx);
+  // taken[0] is the chosen one (lowest idx); the rest are the "broken row" remainder
+  const chosen = taken[0];
+  const rest = taken.slice(1);
+  // All go to hand
+  p.hand.push(chosen);
+  for (const piece of rest) p.hand.push(piece);
+  state.drewFrom = 'discard';
+  p.mustUseTakenPiece = chosen;
+  // If breaking from non-top, the "extra" pieces are not used-constrained
+  // but: the chosen one must end up in a meld/layoff this turn
+  state.phase = 'action';
+  if (state.current === 0) {
+    rebuildHandGroupsAfterChange();
+    SFX.pick();
+  }
+  if (!p.isAI) {
+    if (rest.length === 0) {
+      help('Trebuie să folosești piesa luată într-o etalare sau lipire în această tură.');
+    } else {
+      help(`Ai luat ${taken.length} piese (rupere șir). Piesa aleasă trebuie folosită în etalare/lipire în această tură.`);
+    }
+  }
+  render();
+}
+
+function discardPiece(pieceId, opts) {
+  opts = opts || {};
+  const p = activeP();
+  if (state.phase !== 'action' && state.phase !== 'discard') {
+    toast('Nu poți arunca acum.');
+    return;
+  }
+  const idx = p.hand.findIndex(x => x.id === pieceId);
+  if (idx < 0) return;
+  // Validate "must use taken piece"
+  if (p.mustUseTakenPiece && !opts.force) {
+    // If the must-use piece is still in hand and was not used, illegal
+    const stillIn = p.hand.find(x => x.id === p.mustUseTakenPiece.id);
+    if (stillIn) {
+      toast('Trebuie să folosești piesa luată din șir înainte de a arunca.');
+      return;
+    }
+  }
+  // Hand limit check: after discard hand should be <= 14
+  if (!opts.force && p.hand.length - 1 > 14) {
+    toast('Prea multe piese; etalează sau lipește mai multe.');
+    return;
+  }
+  const piece = p.hand.splice(idx, 1)[0];
+  state.discard.push(piece);
+  p.mustUseTakenPiece = null;
+  if (state.current === 0) {
+    rebuildHandGroupsAfterChange();
+    SFX.discard();
+  }
+  // Check close after discard
+  if (p.hand.length === 0 && p.hasEtalat) {
+    closeRound(state.current, null);
+    return;
+  }
+  endTurn();
+}
+
+/* ---------- MELDING ---------- */
+function tryEtalat(meldsToPlay) {
+  // meldsToPlay: array of {type, pieces}
+  const p = activeP();
+  // Validate each
+  for (const m of meldsToPlay) {
+    if (!isValidMeld(m)) return { ok: false, reason: 'Combinație invalidă.' };
+  }
+  // If first meld for this player, need >= 45 points AND at least one suite (or terta-de-1 exception)
+  if (!p.hasEtalat) {
+    const totalFirst = meldsToPlay.reduce((s, m) => s + meldPointValueFirstMeld(m), 0);
+    const hasSuite = meldsToPlay.some(m => m.type === 'suite');
+    const hasTertaDe1 = meldsToPlay.some(m => m.type === 'group' && m.pieces.some(pp => !pp.joker && pp.num === 1));
+    if (!hasSuite && !hasTertaDe1) {
+      return { ok: false, reason: 'Prima etalare trebuie să conțină o suită (sau terță de 1).' };
+    }
+    if (totalFirst < 45) {
+      return { ok: false, reason: `Prima etalare are doar ${totalFirst}p, trebuie ≥45p.` };
+    }
+  }
+  // Remove pieces from hand
+  const ids = new Set();
+  for (const m of meldsToPlay) for (const piece of m.pieces) ids.add(piece.id);
+  // verify all are in hand
+  for (const id of ids) {
+    if (!p.hand.find(x => x.id === id)) return { ok: false, reason: 'Piese inconsistente.' };
+  }
+  // Apply
+  p.hand = p.hand.filter(x => !ids.has(x.id));
+  for (const m of meldsToPlay) {
+    state.melds.push({ owner: state.current, type: m.type, pieces: m.pieces });
+  }
+  p.hasEtalat = true;
+  // Used must-use piece?
+  if (p.mustUseTakenPiece && ids.has(p.mustUseTakenPiece.id)) {
+    p.mustUseTakenPiece = null;
+  }
+  if (state.current === 0) rebuildHandGroupsAfterChange();
+  return { ok: true };
+}
+
+function tryLayoff(layoffs) {
+  // layoffs: [{pieceId, meldIdx, position?}]
+  const p = activeP();
+  if (!p.hasEtalat) return { ok: false, reason: 'Trebuie să fii etalat mai întâi.' };
+  // For simplicity, we attempt all and validate the resulting meld is still valid
+  // To allow inserting jokers/extending suites at ends, we try positions
+  const meldsCopy = state.melds.map(m => ({ ...m, pieces: [...m.pieces] }));
+  const placed = [];
+  for (const lo of layoffs) {
+    const piece = p.hand.find(x => x.id === lo.pieceId);
+    if (!piece) return { ok: false, reason: 'Piesă inexistentă.' };
+    const meld = meldsCopy[lo.meldIdx];
+    if (!meld) return { ok: false, reason: 'Combinație inexistentă.' };
+    // Try at each insertion point
+    let placedOk = false;
+    for (let pos = 0; pos <= meld.pieces.length; pos++) {
+      const trial = [...meld.pieces.slice(0, pos), piece, ...meld.pieces.slice(pos)];
+      const trialMeld = { type: meld.type, pieces: trial };
+      if (isValidMeld(trialMeld)) {
+        meld.pieces = trial;
+        placedOk = true; break;
+      }
+    }
+    if (!placedOk) return { ok: false, reason: `Piesa nu se potrivește la combinația aleasă.` };
+    placed.push(piece.id);
+  }
+  // Commit
+  state.melds = meldsCopy;
+  p.hand = p.hand.filter(x => !placed.includes(x.id));
+  // Used must-use piece?
+  if (p.mustUseTakenPiece && placed.includes(p.mustUseTakenPiece.id)) {
+    p.mustUseTakenPiece = null;
+  }
+  if (state.current === 0) rebuildHandGroupsAfterChange();
+  return { ok: true };
+}
+
+/* ---------- CLOSING / SCORING ---------- */
+function closeRound(closerIdx, lastDiscarded) {
+  clearTurnTimer();
+  state.closed = true;
+  const closer = state.players[closerIdx];
+
+  // ===== Remi pe tablă scoring =====
+  if (state.mode === 'tabla') {
+    // Closer gets 250 from each other player (500 if "joc dublu" via free joker)
+    const closedWithJoker = lastDiscarded && lastDiscarded.joker;
+    const baseAmount = closedWithJoker ? 500 : 250;
+    const numOthers = state.players.length - 1;
+    const results = state.players.map((p, i) => {
+      if (i === closerIdx) {
+        return { idx: i, name: p.name, base: baseAmount * numOthers, melded: 0, handCount: p.hand.length };
+      }
+      return { idx: i, name: p.name, base: -baseAmount, melded: 0, handCount: p.hand.length };
+    });
+    if (state.doubleGame) {
+      for (const r of results) r.base *= 2;
+    }
+    for (const r of results) {
+      state.totals[r.idx] = (state.totals[r.idx] || 0) + r.base;
+    }
+    SFX.win();
+    showEnd(results, closer.name + (closedWithJoker ? ' (cu joc dublu!)' : ''));
+    return;
+  }
+
+  // ===== Remi etalat scoring =====
+  // Calculate score per player
+  const results = state.players.map((p, i) => {
+    let pts = 0;
+    let melded = state.melds.filter(m => m.owner === i);
+    pts += melded.reduce((s, m) => s + m.pieces.reduce((ss, pp) => ss + (pp.placedBy === i ? finalPieceValue(pp) : (pp.placedBy === undefined ? finalPieceValue(pp) : 0)), 0), 0);
+    // Add layoffs to other melds
+    for (const m of state.melds) {
+      if (m.owner !== i) {
+        for (const piece of m.pieces) {
+          if (piece.placedBy === i) pts += finalPieceValue(piece);
+        }
+      }
+    }
+    // Subtract hand pieces
+    const handPts = p.hand.reduce((s, pp) => s + finalPieceValue(pp), 0);
+    pts -= handPts;
+    // Not etalat penalty
+    if (!p.hasEtalat) {
+      pts = -100;
+      if (p.calledAtu) pts += 50; // -50 net
+    }
+    // Closing bonus
+    if (i === closerIdx) pts += 50;
+    // Atu held bonus (only if etalat or with -50 case above handled)
+    if (p.calledAtu && p.hasEtalat) pts += 50;
+    return { idx: i, name: p.name, base: pts, melded: melded.length, handCount: p.hand.length };
+  });
+  // Joker close => closer's points double
+  const closedWithJoker = lastDiscarded && lastDiscarded.joker;
+  if (closedWithJoker) {
+    results[closerIdx].base *= 2;
+  }
+  // Joc dublu: all double
+  if (state.doubleGame) {
+    for (const r of results) r.base *= 2;
+  }
+  // Apply to totals
+  for (const r of results) {
+    state.totals[r.idx] = (state.totals[r.idx] || 0) + r.base;
+  }
+  // Play sound based on whether human won
+  if (closerIdx === 0) SFX.win(); else SFX.lose();
+  showEnd(results, closer.name + (closedWithJoker ? ' (a închis cu Joker!)' : ''));
+}
+
+function endRoundStockEmpty() {
+  clearTurnTimer();
+  state.closed = true;
+  const results = state.players.map((p, i) => {
+    let pts = 0;
+    for (const m of state.melds) {
+      for (const piece of m.pieces) {
+        const placedBy = piece.placedBy !== undefined ? piece.placedBy : m.owner;
+        if (placedBy === i) pts += finalPieceValue(piece);
+      }
+    }
+    const handPts = p.hand.reduce((s, pp) => s + finalPieceValue(pp), 0);
+    pts -= handPts;
+    if (!p.hasEtalat) {
+      pts = -100;
+      if (p.calledAtu) pts += 50;
+    } else if (p.calledAtu) {
+      pts += 50;
+    }
+    return { idx: i, name: p.name, base: pts, melded: state.melds.filter(m=>m.owner===i).length, handCount: p.hand.length };
+  });
+  if (state.doubleGame) {
+    for (const r of results) r.base *= 2;
+  }
+  for (const r of results) {
+    state.totals[r.idx] = (state.totals[r.idx] || 0) + r.base;
+  }
+  showEnd(results, 'Grămada s-a terminat (fără închidere)');
+}
+
+function showEnd(results, msg) {
+  const winnerIdx = results.reduce((best, r) => r.base > best.base ? r : best, results[0]).idx;
+  let html = `<p style="text-align:center;">${msg}</p>`;
+  html += `<table class="scores"><thead><tr><th>Jucător</th><th class="num">Rundă</th><th class="num">Total</th></tr></thead><tbody>`;
+  for (const r of results) {
+    html += `<tr class="${r.idx === winnerIdx ? 'win' : ''}"><td>${r.name}</td><td class="num">${r.base > 0 ? '+' : ''}${r.base}</td><td class="num">${state.totals[r.idx]}</td></tr>`;
+  }
+  html += `</tbody></table>`;
+  if (state.doubleGame) html += `<p style="font-size:12px; opacity:0.7; text-align:center;">⚡ Joc dublu (Atu = ${state.atu.joker ? 'Joker' : '1'})</p>`;
+  document.getElementById('endContent').innerHTML = html;
+  document.getElementById('endTitle').textContent = `Runda ${state.round} — ${results[winnerIdx].name} câștigă`;
+  document.getElementById('modalEnd').classList.add('show');
+}
+
+/* ---------- AI ---------- */
+function aiPlay() {
+  try {
+    const p = activeP();
+    if (!p.isAI) return;
+    if (state.closed) return;
+
+    // 1. Draw decision — for safety, AI just draws from stock (avoids must-use complexity)
+    if (state.phase === 'draw') {
+      if (state.stock.length === 0) {
+        endRoundStockEmpty();
+        return;
+      }
+      drawFromStock();
+      setTimeout(aiPlay, 600);
+      return;
+    }
+
+    // 2. Action depends on game mode
+    if (state.mode === 'tabla') {
+      // In 'tabla' mode AI checks if it can close (hand fully in melds + at most 1 leftover)
+      const result = analyzeHandForClose(p.hand);
+      if (result.canClose) {
+        // AI closes!
+        toast(`${p.name} a închis pe tablă!`);
+        const closingPiece = result.leftover;
+        if (closingPiece) {
+          p.hand = p.hand.filter(x => x.id !== closingPiece.id);
+          state.discard.push(closingPiece);
+        }
+        // Mark AI's board melds for display
+        p.boardMelds = result.melds.map(m => ({ type: m.type, pieces: m.pieces, owner: state.current }));
+        const myIdx = state.current;
+        setTimeout(() => closeRound(myIdx, closingPiece), 300);
+        return;
+      }
+      // Else just discard high-value
+    } else {
+      // 'etalat' mode (original)
+      if (!p.hasEtalat) {
+        const found = findFirstMeldSet(p.hand);
+        if (found) {
+          const res = tryEtalat(found.map(m => ({ type: m.type, pieces: m.pieces.map(piece => ({...piece, placedBy: state.current})) })));
+          if (res.ok) {
+            toast(`${p.name} s-a etalat!`);
+          }
+        }
+      } else {
+        // Try to play additional melds
+        const more = findAnyMelds(p.hand);
+        for (const m of more) {
+          const stamped = { type: m.type, pieces: m.pieces.map(piece => ({...piece, placedBy: state.current})) };
+          tryEtalat([stamped]);
+        }
+        // Try layoffs
+        const layoffs = findLayoffs(p.hand, state.melds);
+        if (layoffs.length > 0) {
+          // Tag placedBy
+          for (const lo of layoffs) {
+            const piece = p.hand.find(x => x.id === lo.pieceId);
+            if (piece) piece.placedBy = state.current;
+          }
+          tryLayoff(layoffs);
+        }
+      }
+    }
+
+    // 3. Discard — always succeeds (force-clear must-use since AI doesn't optimally use it)
+    p.mustUseTakenPiece = null;
+    if (p.hand.length === 0) {
+      // shouldn't happen in normal flow without closing
+      endTurn();
+      return;
+    }
+    const piece = chooseDiscard(p);
+    setTimeout(() => {
+      try {
+        if (piece && p.hand.some(x => x.id === piece.id)) {
+          discardPiece(piece.id, { force: true });
+        } else if (p.hand.length > 0) {
+          discardPiece(p.hand[0].id, { force: true });
+        } else {
+          endTurn();
+        }
+      } catch (err) {
+        console.error('AI discard error:', err);
+        try { endTurn(); } catch(_) {}
+      }
+    }, 500);
+  } catch (err) {
+    console.error('aiPlay error:', err);
+    try { endTurn(); } catch(_) {}
+  }
+}
+
+// For 'tabla' mode: try to partition hand into valid melds + at most 1 leftover
+function analyzeHandForClose(hand) {
+  // Try greedy: find all melds in hand using findAnyMelds, see if uncovered <= 1
+  const melds = findAnyMelds(hand);
+  const used = new Set();
+  for (const m of melds) for (const p of m.pieces) used.add(p.id);
+  const uncovered = hand.filter(p => !used.has(p.id));
+  if (uncovered.length <= 1 && melds.length > 0) {
+    return { canClose: true, melds, leftover: uncovered[0] || null };
+  }
+  return { canClose: false };
+}
+
+function chooseDiscard(p) {
+  // Pick the highest-value piece that doesn't break a potential meld
+  // Simple: highest finalPieceValue piece that isn't a joker
+  let best = null;
+  for (const piece of p.hand) {
+    if (piece.joker) continue;
+    if (p.mustUseTakenPiece && piece.id === p.mustUseTakenPiece.id) continue;
+    if (!best || finalPieceValue(piece) > finalPieceValue(best)) best = piece;
+  }
+  // Also avoid throwing if hand has 0 after which case we want to close — handled by endTurn
+  return best || p.hand[0];
+}
+
+/* ---------- MELD FINDING (combinatorial, bounded) ---------- */
+function findAnyMeldUsing(hand, requiredPiece) {
+  const melds = findAnyMelds(hand);
+  for (const m of melds) if (m.pieces.includes(requiredPiece)) return m;
+  return null;
+}
+
+function findAnyMelds(hand) {
+  // Greedy: find groups first (same num, diff color), then suites
+  const found = [];
+  const used = new Set();
+  // Groups
+  const byNum = {};
+  for (const p of hand) {
+    if (p.joker) continue;
+    byNum[p.num] = byNum[p.num] || [];
+    byNum[p.num].push(p);
+  }
+  const jokers = hand.filter(p => p.joker && !used.has(p.id));
+  for (const num in byNum) {
+    const pieces = byNum[num].filter(p => !used.has(p.id));
+    const byColor = {};
+    for (const p of pieces) byColor[p.color] = p;
+    const distinct = Object.values(byColor);
+    if (distinct.length >= 3) {
+      const group = { type: 'group', pieces: distinct.slice(0, 4) };
+      group.pieces.forEach(p => used.add(p.id));
+      found.push(group);
+    } else if (distinct.length === 2 && jokers.length > 0) {
+      const j = jokers.shift();
+      const group = { type: 'group', pieces: [...distinct, j] };
+      group.pieces.forEach(p => used.add(p.id));
+      found.push(group);
+    }
+  }
+  // Suites
+  const byColor = {};
+  for (const p of hand) {
+    if (p.joker || used.has(p.id)) continue;
+    byColor[p.color] = byColor[p.color] || [];
+    byColor[p.color].push(p);
+  }
+  for (const color in byColor) {
+    const list = byColor[color].slice().sort((a, b) => a.num - b.num);
+    let run = [];
+    for (let i = 0; i < list.length; i++) {
+      if (run.length === 0 || list[i].num === run[run.length-1].num + 1) {
+        run.push(list[i]);
+      } else if (list[i].num === run[run.length-1].num) {
+        // duplicate, skip
+        continue;
+      } else {
+        if (run.length >= 3) {
+          const s = { type: 'suite', pieces: [...run] };
+          s.pieces.forEach(p => used.add(p.id));
+          found.push(s);
+        }
+        run = [list[i]];
+      }
+    }
+    if (run.length >= 3) {
+      const s = { type: 'suite', pieces: [...run] };
+      s.pieces.forEach(p => used.add(p.id));
+      found.push(s);
+    }
+  }
+  return found;
+}
+
+function findFirstMeldSet(hand) {
+  // Need >=45 points and at least one suite
+  // Try greedy: get all suites and groups, prefer those totaling >=45 with a suite
+  const all = findAnyMelds(hand);
+  const suites = all.filter(m => m.type === 'suite');
+  const groups = all.filter(m => m.type === 'group');
+  const groupsDe1 = groups.filter(m => m.pieces.some(p => !p.joker && p.num === 1));
+  // Try combos including >=1 suite
+  if (suites.length > 0) {
+    // start with biggest suite
+    suites.sort((a,b) => meldPointValueFirstMeld(b) - meldPointValueFirstMeld(a));
+    let chosen = [suites[0]];
+    let total = meldPointValueFirstMeld(suites[0]);
+    // Add more if needed
+    const candidates = [...suites.slice(1), ...groups].sort((a,b) => meldPointValueFirstMeld(b) - meldPointValueFirstMeld(a));
+    for (const c of candidates) {
+      if (total >= 45) break;
+      chosen.push(c);
+      total += meldPointValueFirstMeld(c);
+    }
+    if (total >= 45) return chosen;
+  }
+  // Try with terta de 1 + groups
+  if (groupsDe1.length > 0) {
+    let chosen = [groupsDe1[0]];
+    let total = meldPointValueFirstMeld(groupsDe1[0]);
+    for (const c of [...groups, ...suites].filter(x => !chosen.includes(x))) {
+      if (total >= 45) break;
+      chosen.push(c);
+      total += meldPointValueFirstMeld(c);
+    }
+    if (total >= 45) return chosen;
+  }
+  return null;
+}
+
+function findLayoffs(hand, melds) {
+  const out = [];
+  const usedIds = new Set();
+  for (let mi = 0; mi < melds.length; mi++) {
+    const meld = melds[mi];
+    for (const piece of hand) {
+      if (usedIds.has(piece.id)) continue;
+      for (let pos = 0; pos <= meld.pieces.length; pos++) {
+        const trial = [...meld.pieces.slice(0, pos), piece, ...meld.pieces.slice(pos)];
+        if (isValidMeld({ type: meld.type, pieces: trial })) {
+          out.push({ pieceId: piece.id, meldIdx: mi });
+          usedIds.add(piece.id);
+          break;
+        }
+      }
+    }
+  }
+  return out;
+}
+
+/* ---------- RENDER ---------- */
+function pieceEl(piece, opts = {}) {
+  const small = opts.small;
+  const el = document.createElement('div');
+  el.className = 'piece' + (small ? ' small' : '') + (piece.joker ? ' joker' : ' ' + piece.color);
+  if (opts.selected) el.classList.add('selected');
+  if (opts.disabled) el.classList.add('disabled');
+  if (!piece.joker) {
+    const n = document.createElement('span');
+    n.className = 'num';
+    n.textContent = piece.num;
+    el.appendChild(n);
+  }
+  if (opts.onClick) el.onclick = opts.onClick;
+  el.dataset.pid = piece.id;
+  return el;
+}
+
+function render() {
+  // Opponents
+  const oppDiv = document.getElementById('opponents');
+  oppDiv.innerHTML = '';
+  for (let i = 1; i < state.players.length; i++) {
+    const p = state.players[i];
+    const card = document.createElement('div');
+    card.className = 'opp' + (state.current === i ? ' active' : '') + (p.hasEtalat ? ' etalat' : '');
+    card.innerHTML = `
+      <div class="name">${p.name}</div>
+      <div class="stats">
+        <span class="pieces">🂠 ${p.hand.length}</span>
+        <span class="score">${state.totals[i] || 0}p</span>
+      </div>
+    `;
+    oppDiv.appendChild(card);
+  }
+
+  // Melds
+  const meldsDiv = document.getElementById('melds');
+  meldsDiv.innerHTML = '';
+  const emptyHint = document.getElementById('emptyHint');
+  if (state.melds.length === 0) {
+    emptyHint.style.display = 'block';
+    if (state.mode === 'tabla') {
+      emptyHint.textContent = 'Mod "pe tablă": formează toate combinațiile în mână. Când mâna ta e numai combinații (max 1 piesă liberă), trage un grup pe această zonă pentru a închide jocul.';
+    } else {
+      emptyHint.textContent = 'Nicio etalare încă. Trage o piesă apoi etalează când ai cel puțin 45 puncte și o suită.';
+    }
+  } else {
+    emptyHint.style.display = 'none';
+  }
+  // Group melds by owner, preserving meld idx for drop handlers
+  const meldsByOwner = new Map();
+  for (let i = 0; i < state.melds.length; i++) {
+    const m = state.melds[i];
+    if (!meldsByOwner.has(m.owner)) meldsByOwner.set(m.owner, []);
+    meldsByOwner.get(m.owner).push({ meld: m, idx: i });
+  }
+  // Render each player's column in player-index order (you first, then others in seat order)
+  const ownerOrder = [];
+  if (meldsByOwner.has(0)) ownerOrder.push(0);
+  for (let pi = 1; pi < state.players.length; pi++) {
+    if (meldsByOwner.has(pi)) ownerOrder.push(pi);
+  }
+  for (const ownerIdx of ownerOrder) {
+    const ownerMelds = meldsByOwner.get(ownerIdx);
+    const col = document.createElement('div');
+    col.className = 'meld-column';
+    if (ownerIdx === 0) col.classList.add('mine');
+    // Column header with player name
+    const header = document.createElement('div');
+    header.className = 'meld-column-header';
+    header.textContent = state.players[ownerIdx].name;
+    col.appendChild(header);
+    // Stack each meld
+    for (const { meld, idx } of ownerMelds) {
+      const row = document.createElement('div');
+      row.className = 'meld-row';
+      row.dataset.meldIdx = idx;
+      for (const piece of meld.pieces) {
+        row.appendChild(pieceEl(piece, { small: true }));
+      }
+      col.appendChild(row);
+    }
+    meldsDiv.appendChild(col);
+  }
+  attachMeldRowDropHandlers();
+
+  // Stock & discard
+  document.getElementById('stockCount').textContent = state.stock.length;
+  document.getElementById('discardCount').textContent = state.discard.length;
+  const discardStrip = document.getElementById('discardStrip');
+  discardStrip.innerHTML = '';
+  if (state.discard.length === 0) {
+    discardStrip.classList.add('empty');
+  } else {
+    discardStrip.classList.remove('empty');
+    const isYourTurn = state.current === 0;
+    const isDrawPhase = state.phase === 'draw';
+    const you = state.players[0];
+    for (let i = 0; i < state.discard.length; i++) {
+      const piece = state.discard[i];
+      const wrap = document.createElement('div');
+      wrap.className = 'discard-piece';
+      wrap.dataset.discardIdx = i;
+      // First piece is the "opener" — face-down/reversed visually, never takeable
+      if (i === 0 && state.discard.length > 1) {
+        wrap.classList.add('first');
+      } else {
+        // Determine takeable: top piece always (if not blocked); breaking-the-line piece only if etalat & ≥4 pieces
+        const isTop = (i === state.discard.length - 1);
+        let canTake = false;
+        if (isYourTurn && isDrawPhase) {
+          if (isTop && you.hand.length > 2) canTake = true;
+          else if (!isTop && you.hasEtalat && you.hand.length >= 4) canTake = true;
+        }
+        if (canTake) {
+          wrap.classList.add('takeable');
+          wrap.onclick = () => takeDiscard(i);
+        }
+      }
+      const pe = pieceEl(piece, {});
+      pe.style.pointerEvents = 'none';
+      wrap.appendChild(pe);
+      discardStrip.appendChild(wrap);
+    }
+    // Auto-scroll to the rightmost piece (top of discard)
+    setTimeout(() => { discardStrip.scrollLeft = discardStrip.scrollWidth; }, 0);
+  }
+  // Atu
+  const atuSpot = document.getElementById('atuSpot');
+  atuSpot.innerHTML = '';
+  if (state.atu) atuSpot.appendChild(pieceEl(state.atu, {}));
+
+  // You hand — uses handGroups so grouped pieces appear as boxed groups
+  const you = state.players[0];
+  // Sanity check: ensure handGroups is consistent
+  if (!state.handGroups || state.handGroups.length === 0) {
+    rebuildHandGroupsAfterChange();
+  }
+  const handDiv = document.getElementById('hand');
+  handDiv.innerHTML = '';
+
+  for (let nodeIdx = 0; nodeIdx < state.handGroups.length; nodeIdx++) {
+    const node = state.handGroups[nodeIdx];
+    if (node.type === 'piece') {
+      const piece = getPieceById(node.pieceId);
+      if (!piece) continue;
+      const el = pieceEl(piece, {});
+      el.draggable = true;
+      el.dataset.nodeIdx = nodeIdx;
+      el.dataset.nodeType = 'piece';
+      attachNodeDragHandlers(el, nodeIdx);
+      handDiv.appendChild(el);
+    } else {
+      // group node — render as a box containing the pieces
+      const box = document.createElement('div');
+      box.className = 'hand-group';
+      box.dataset.nodeIdx = nodeIdx;
+      box.dataset.nodeType = 'group';
+      box.draggable = true;
+
+      const valid = isGroupValidMeld(node);
+      if (valid) box.classList.add('valid');
+      // Render pieces inside (in proper order if suite)
+      const inferred = inferGroupMeld(node);
+      const orderedPieces = inferred ? inferred.pieces : piecesInNode(node);
+      for (const piece of orderedPieces) {
+        const pe = pieceEl(piece, {});
+        pe.style.pointerEvents = 'none'; // The whole box is the drag target
+        box.appendChild(pe);
+      }
+      // Point badge (visible when valid)
+      if (valid && inferred) {
+        const pts = meldPointValueFirstMeld(inferred);
+        const badge = document.createElement('span');
+        badge.className = 'group-pts';
+        badge.textContent = pts + 'p';
+        box.appendChild(badge);
+      }
+      // Small "break" button
+      const breakBtn = document.createElement('button');
+      breakBtn.className = 'group-break';
+      breakBtn.textContent = '✕';
+      breakBtn.title = 'Sparge grupul';
+      breakBtn.onclick = (e) => {
+        e.stopPropagation();
+        ungroupNode(nodeIdx);
+        render();
+      };
+      box.appendChild(breakBtn);
+
+      attachNodeDragHandlers(box, nodeIdx);
+      handDiv.appendChild(box);
+    }
+  }
+  document.getElementById('youScore').textContent = (state.totals[0] || 0) + 'p';
+
+  // Help text feedback based on mode
+  if (state.current === 0 && state.phase === 'action') {
+    if (state.mode === 'tabla') {
+      // Pe tablă: count free singles vs groups
+      const singles = state.handGroups.filter(n => n.type === 'piece').length;
+      const groups = state.handGroups.filter(n => n.type === 'group');
+      const validGroups = groups.filter(g => isGroupValidMeld(g)).length;
+      const invalidGroups = groups.length - validGroups;
+      if (singles <= 1 && invalidGroups === 0 && validGroups > 0) {
+        help(`Gata de închidere ✓ — trage un grup pe masă pentru a închide.`);
+      } else {
+        const parts = [];
+        if (singles > 1) parts.push(`mai ai ${singles} piese libere (max 1)`);
+        if (invalidGroups > 0) parts.push(`${invalidGroups} grup${invalidGroups>1?'uri':''} invalid${invalidGroups>1?'e':''}`);
+        if (parts.length > 0) help('Pe tablă: ' + parts.join(', ') + '.', true);
+        else help('Formează combinații în mână (drag piesă peste piesă).');
+      }
+    } else if (!you.hasEtalat) {
+      const validGroups = state.handGroups
+        .filter(n => n.type === 'group')
+        .map(n => inferGroupMeld(n))
+        .filter(m => m && isValidMeld(m));
+      const totalPts = validGroups.reduce((s, m) => s + meldPointValueFirstMeld(m), 0);
+      const hasSuite = validGroups.some(m => m.type === 'suite');
+      const hasTertaDe1 = validGroups.some(m => m.type === 'group' && m.pieces.some(p => !p.joker && p.num === 1));
+      if (totalPts > 0) {
+        if (totalPts >= 45 && (hasSuite || hasTertaDe1)) {
+          help(`Gata: ${totalPts}p ✓ — trage un grup pe masă pentru etalare.`);
+        } else {
+          const need = [];
+          if (totalPts < 45) need.push(`${45 - totalPts}p`);
+          if (!hasSuite && !hasTertaDe1) need.push('suită');
+          help(`Prima etalare: ${totalPts}p${(hasSuite||hasTertaDe1)?' (suită ✓)':''} — mai ai nevoie de ${need.join(' + ')}.`, true);
+        }
+      }
+    }
+  }
+
+  // Buttons enable/disable
+  const isYourTurn = state.current === 0;
+  const ph = state.phase;
+
+  // Visual cues on stock & discard
+  const stockEl = document.getElementById('stock');
+  stockEl.classList.toggle('active', isYourTurn && ph === 'draw');
+}
+
+function sortPieces(a, b) {
+  if (a.joker && !b.joker) return 1;
+  if (!a.joker && b.joker) return -1;
+  if (a.color !== b.color) return COLORS.indexOf(a.color) - COLORS.indexOf(b.color);
+  return a.num - b.num;
+}
+
+/* ---------- HAND GROUPS (build melds in hand) ---------- */
+function getPieceById(id) {
+  return state.players[0].hand.find(p => p.id === id);
+}
+
+function pieceIdsInNode(node) {
+  return node.type === 'piece' ? [node.pieceId] : node.pieceIds;
+}
+
+function piecesInNode(node) {
+  return pieceIdsInNode(node).map(getPieceById).filter(Boolean);
+}
+
+// Try to add a piece to a group, return new ordered list if valid (or any sensible order)
+function tryAddToGroup(group, piece) {
+  const current = group.pieceIds.map(getPieceById).filter(Boolean);
+  // Try all orderings: append, but check validity of intended meld
+  // Heuristic: if all pieces share same num -> group (terta), append
+  // If pieces look like a suite -> insert in sorted position
+  const test = [...current, piece];
+  const realNums = test.filter(p => !p.joker).map(p => p.num);
+  const allSameNum = realNums.length > 0 && realNums.every(n => n === realNums[0]);
+  let ordered;
+  if (allSameNum) {
+    ordered = test; // group order doesn't matter
+  } else {
+    // suite — sort numerically, jokers go where needed (heuristic: at end then we'll fix)
+    const reals = test.filter(p => !p.joker).sort((a,b) => a.num - b.num);
+    const jokers = test.filter(p => p.joker);
+    // Place jokers in gaps to make consecutive
+    ordered = placeSuiteWithJokers(reals, jokers);
+    if (!ordered) ordered = test;
+  }
+  return ordered;
+}
+
+function placeSuiteWithJokers(reals, jokers) {
+  if (reals.length === 0) return null;
+  // Determine color
+  const color = reals[0].color;
+  if (!reals.every(p => p.color === color)) return null;
+  // Sort reals
+  reals.sort((a,b) => a.num - b.num);
+  // Try to fit: start from lowest, fill gaps with jokers
+  const result = [];
+  let jokersLeft = [...jokers];
+  for (let i = 0; i < reals.length; i++) {
+    if (i === 0) {
+      result.push(reals[i]);
+    } else {
+      const gap = reals[i].num - reals[i-1].num - 1;
+      if (gap < 0) return null; // duplicate
+      for (let g = 0; g < gap; g++) {
+        if (jokersLeft.length === 0) return null;
+        result.push(jokersLeft.shift());
+      }
+      result.push(reals[i]);
+    }
+  }
+  // Remaining jokers extend at end
+  while (jokersLeft.length > 0) result.push(jokersLeft.shift());
+  return result;
+}
+
+function inferGroupMeld(node) {
+  if (node.type !== 'group') return null;
+  const pieces = piecesInNode(node);
+  if (pieces.length === 0) return null;
+  const reals = pieces.filter(p => !p.joker);
+  if (reals.length === 0) return null;
+  const allSameNum = reals.every(p => p.num === reals[0].num);
+  if (allSameNum) {
+    return { type: 'group', pieces };
+  }
+  // Sort suite
+  const sorted = placeSuiteWithJokers(reals, pieces.filter(p => p.joker));
+  if (!sorted) {
+    return { type: 'suite', pieces };
+  }
+  return { type: 'suite', pieces: sorted };
+}
+
+function isGroupValidMeld(node) {
+  const meld = inferGroupMeld(node);
+  if (!meld) return false;
+  return isValidMeld(meld);
+}
+
+function mergeIntoGroup(srcNodeIdx, dstNodeIdx) {
+  const groups = state.handGroups;
+  if (srcNodeIdx === dstNodeIdx) return;
+  const src = groups[srcNodeIdx];
+  const dst = groups[dstNodeIdx];
+  if (!src || !dst) return;
+  const srcIds = pieceIdsInNode(src);
+  const dstIds = pieceIdsInNode(dst);
+  const merged = { type: 'group', pieceIds: [...dstIds, ...srcIds] };
+  // Replace dst with merged, remove src
+  const newGroups = [];
+  for (let i = 0; i < groups.length; i++) {
+    if (i === srcNodeIdx) continue;
+    if (i === dstNodeIdx) newGroups.push(merged);
+    else newGroups.push(groups[i]);
+  }
+  state.handGroups = newGroups;
+  // Play 'group' sound if the result is a valid meld, else just a soft click
+  if (isGroupValidMeld(merged)) SFX.group();
+}
+
+function reorderHandGroup(fromIdx, toIdx) {
+  if (fromIdx < 0 || toIdx < 0) return;
+  if (fromIdx >= state.handGroups.length || toIdx >= state.handGroups.length) return;
+  const arr = state.handGroups;
+  const [moved] = arr.splice(fromIdx, 1);
+  arr.splice(toIdx, 0, moved);
+}
+
+function ungroupNode(nodeIdx) {
+  const node = state.handGroups[nodeIdx];
+  if (!node || node.type !== 'group') return;
+  const ids = node.pieceIds;
+  state.handGroups.splice(nodeIdx, 1, ...ids.map(id => ({ type: 'piece', pieceId: id })));
+  SFX.groupBreak();
+}
+
+function autoSortHand() {
+  const you = state.players[0];
+  // Sort the underlying hand and rebuild groups as singles
+  you.hand.sort(sortPieces);
+  state.handGroups = you.hand.map(p => ({ type: 'piece', pieceId: p.id }));
+  render();
+}
+
+function rebuildHandGroupsAfterChange() {
+  // Ensure handGroups reflects current hand; remove ids no longer in hand, add new pieces at end
+  const you = state.players[0];
+  const handIds = new Set(you.hand.map(p => p.id));
+  // Filter existing
+  const newGroups = [];
+  for (const node of state.handGroups) {
+    if (node.type === 'piece') {
+      if (handIds.has(node.pieceId)) newGroups.push(node);
+    } else {
+      const keptIds = node.pieceIds.filter(id => handIds.has(id));
+      if (keptIds.length === 0) continue;
+      if (keptIds.length === 1) newGroups.push({ type: 'piece', pieceId: keptIds[0] });
+      else newGroups.push({ type: 'group', pieceIds: keptIds });
+    }
+  }
+  // Add any new pieces (in hand but not yet in groups)
+  const seenIds = new Set();
+  for (const node of newGroups) for (const id of pieceIdsInNode(node)) seenIds.add(id);
+  for (const piece of you.hand) {
+    if (!seenIds.has(piece.id)) newGroups.push({ type: 'piece', pieceId: piece.id });
+  }
+  state.handGroups = newGroups;
+}
+
+/* ---------- DRAG & DROP (works on hand-group nodes) ---------- */
+let dragSrcNode = null; // index in state.handGroups
+
+function attachNodeDragHandlers(el, nodeIdx) {
+  // Desktop drag
+  el.addEventListener('dragstart', (e) => {
+    dragSrcNode = nodeIdx;
+    el.style.opacity = '0.4';
+    if (e.dataTransfer) {
+      e.dataTransfer.effectAllowed = 'move';
+      try { e.dataTransfer.setData('text/plain', String(nodeIdx)); } catch (_) {}
+    }
+    // Highlight drop targets
+    const node = state.handGroups[nodeIdx];
+    if (canDiscardNow() && node.type === 'piece') {
+      document.getElementById('discardStrip').classList.add('drop-target');
+    }
+    // Layoff: only single pieces can be laid off
+    if (canLayoffNow() && node.type === 'piece') {
+      highlightLayoffTargets(getPieceById(node.pieceId));
+    }
+    // Etalat: groups can be dragged to table
+    if (canEtalatNow() && node.type === 'group' && isGroupValidMeld(node)) {
+      document.getElementById('tableArea').classList.add('drop-target-table');
+    }
+  });
+  el.addEventListener('dragend', () => {
+    el.style.opacity = '';
+    dragSrcNode = null;
+    clearAllHints();
+  });
+  el.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    if (e.dataTransfer) e.dataTransfer.dropEffect = 'move';
+    if (dragSrcNode !== null && dragSrcNode !== nodeIdx) {
+      el.style.boxShadow = '0 0 0 2px #d4a443';
+    }
+  });
+  el.addEventListener('dragleave', () => {
+    el.style.boxShadow = '';
+  });
+  el.addEventListener('drop', (e) => {
+    e.preventDefault();
+    el.style.boxShadow = '';
+    if (dragSrcNode === null || dragSrcNode === nodeIdx) return;
+    // Source dropped onto target node: merge into group
+    mergeIntoGroup(dragSrcNode, nodeIdx);
+    render();
+  });
+
+  // Touch — long-press, then drag finger
+  let touchStartX = 0, touchStartY = 0;
+  let longPressTimer = null;
+  let dragging = false;
+  let ghost = null;
+
+  el.addEventListener('touchstart', (e) => {
+    if (e.touches.length !== 1) return;
+    const t = e.touches[0];
+    touchStartX = t.clientX;
+    touchStartY = t.clientY;
+    longPressTimer = setTimeout(() => {
+      dragging = true;
+      dragSrcNode = nodeIdx;
+      el.style.opacity = '0.3';
+      // Make a floating ghost
+      ghost = el.cloneNode(true);
+      ghost.style.position = 'fixed';
+      ghost.style.pointerEvents = 'none';
+      ghost.style.zIndex = '999';
+      ghost.style.opacity = '0.9';
+      ghost.style.transform = 'scale(1.1)';
+      const rect = el.getBoundingClientRect();
+      ghost.style.left = (t.clientX - rect.width/2) + 'px';
+      ghost.style.top = (t.clientY - rect.height/2) + 'px';
+      document.body.appendChild(ghost);
+      if (navigator.vibrate) navigator.vibrate(30);
+
+      // Pre-highlight drop targets
+      const node = state.handGroups[nodeIdx];
+      if (canDiscardNow() && node.type === 'piece') {
+        document.getElementById('discardStrip').classList.add('drop-target');
+      }
+      if (canLayoffNow() && node.type === 'piece') {
+        highlightLayoffTargets(getPieceById(node.pieceId));
+      }
+      if (canEtalatNow() && node.type === 'group' && isGroupValidMeld(node)) {
+        document.getElementById('tableArea').classList.add('drop-target-table');
+      }
+    }, 250);
+  }, { passive: true });
+
+  el.addEventListener('touchmove', (e) => {
+    if (!dragging) {
+      const t = e.touches[0];
+      if (Math.abs(t.clientX - touchStartX) > 10 || Math.abs(t.clientY - touchStartY) > 10) {
+        clearTimeout(longPressTimer);
+      }
+      return;
+    }
+    e.preventDefault();
+    const t = e.touches[0];
+    if (ghost) {
+      const rect = ghost.getBoundingClientRect();
+      ghost.style.left = (t.clientX - rect.width/2) + 'px';
+      ghost.style.top = (t.clientY - rect.height/2) + 'px';
+    }
+    // Find element under finger
+    ghost.style.display = 'none';
+    const under = document.elementFromPoint(t.clientX, t.clientY);
+    ghost.style.display = '';
+
+    // Clear transient row highlights but keep base hints
+    document.querySelectorAll('.meld-row.target, .meld-row.target-invalid').forEach(r => {
+      r.classList.remove('target', 'target-invalid');
+    });
+    document.querySelectorAll('#hand .hand-group, #hand .piece').forEach(p => p.style.boxShadow = '');
+    const discardEl = document.getElementById('discardStrip');
+    const tableArea = document.getElementById('tableArea');
+    const srcNode = state.handGroups[dragSrcNode];
+
+    if (under && srcNode) {
+      const overDiscard = under === discardEl || discardEl.contains(under);
+      const meldRow = under.closest('.meld-row');
+      const overHandNode = under.closest('.hand-group, #hand .piece');
+
+      if (overDiscard && canDiscardNow() && srcNode.type === 'piece') {
+        // already lit via drop-target
+      } else if (meldRow && canLayoffNow() && srcNode.type === 'piece') {
+        const meldIdx = parseInt(meldRow.dataset.meldIdx);
+        const piece = getPieceById(srcNode.pieceId);
+        if (!isNaN(meldIdx) && piece && pieceFitsMeld(piece, state.melds[meldIdx])) {
+          meldRow.classList.add('target');
+        } else {
+          meldRow.classList.add('target-invalid');
+        }
+      } else if (overHandNode && overHandNode !== el) {
+        const tIdx = parseInt(overHandNode.dataset.nodeIdx);
+        if (!isNaN(tIdx) && tIdx !== dragSrcNode) {
+          overHandNode.style.boxShadow = '0 0 0 2px #d4a443';
+        }
+      }
+    }
+  }, { passive: false });
+
+  el.addEventListener('touchend', (e) => {
+    clearTimeout(longPressTimer);
+    if (!dragging) return;
+    dragging = false;
+    el.style.opacity = '';
+    const t = e.changedTouches[0];
+    const discardEl = document.getElementById('discardStrip');
+    const tableArea = document.getElementById('tableArea');
+    if (ghost) {
+      ghost.style.display = 'none';
+      const under = document.elementFromPoint(t.clientX, t.clientY);
+      ghost.remove();
+      ghost = null;
+      const srcNode = state.handGroups[dragSrcNode];
+
+      if (under && srcNode) {
+        // 1. Discard (only for single pieces)
+        if ((under === discardEl || discardEl.contains(under)) && canDiscardNow() && srcNode.type === 'piece') {
+          const piece = getPieceById(srcNode.pieceId);
+          dragSrcNode = null;
+          clearAllHints();
+          if (piece) discardPiece(piece.id);
+          return;
+        }
+        // 2. Layoff on existing meld (only for single pieces)
+        const meldRow = under.closest('.meld-row');
+        if (meldRow && canLayoffNow() && srcNode.type === 'piece') {
+          const meldIdx = parseInt(meldRow.dataset.meldIdx);
+          const piece = getPieceById(srcNode.pieceId);
+          if (!isNaN(meldIdx) && piece) {
+            dragSrcNode = null;
+            clearAllHints();
+            attemptDirectLayoff(piece, meldIdx);
+            return;
+          }
+        }
+        // 3. Etalat: dropping a valid group onto the table area
+        if (srcNode.type === 'group') {
+          const overTable = under === tableArea || tableArea.contains(under);
+          // Also accept if dropped on the empty hint or melds container
+          if (overTable && !meldRow) {
+            dragSrcNode = null;
+            clearAllHints();
+            attemptEtalatFromGroup(srcNode); // will toast if not allowed
+            return;
+          }
+        }
+        // 4. Merge into another hand node (group-forming) OR reorder
+        const overHandNode = under.closest('.hand-group, #hand .piece');
+        if (overHandNode && overHandNode !== el) {
+          const tIdx = parseInt(overHandNode.dataset.nodeIdx);
+          if (!isNaN(tIdx) && tIdx !== dragSrcNode) {
+            mergeIntoGroup(dragSrcNode, tIdx);
+            dragSrcNode = null;
+            clearAllHints();
+            render();
+            return;
+          }
+        }
+      }
+    }
+    clearAllHints();
+    dragSrcNode = null;
+  });
+
+  el.addEventListener('touchcancel', () => {
+    clearTimeout(longPressTimer);
+    if (dragging) {
+      dragging = false;
+      el.style.opacity = '';
+      if (ghost) { ghost.remove(); ghost = null; }
+      clearAllHints();
+      dragSrcNode = null;
+    }
+  });
+}
+
+function clearAllHints() {
+  document.querySelectorAll('#hand .hand-group, #hand .piece').forEach(p => p.style.boxShadow = '');
+  document.querySelectorAll('.meld-row').forEach(r => {
+    r.classList.remove('target', 'target-invalid', 'fit', 'nofit');
+  });
+  const discardEl = document.getElementById('discardStrip');
+  if (discardEl) discardEl.classList.remove('drop-target');
+  const tableArea = document.getElementById('tableArea');
+  if (tableArea) tableArea.classList.remove('drop-target-table');
+}
+
+function canEtalatNow() {
+  if (state.current !== 0) return false;
+  if (state.phase !== 'action') return false;
+  return true;
+}
+
+function attemptEtalatFromGroup(groupNode) {
+  // Phase check with feedback
+  if (state.current !== 0) {
+    toast('Nu e rândul tău.');
+    SFX.invalid();
+    return;
+  }
+  if (state.phase === 'draw') {
+    toast('Trage întâi o piesă din grămadă sau de la aruncate.');
+    SFX.invalid();
+    return;
+  }
+  if (state.phase !== 'action') {
+    toast('Nu poți etala acum.');
+    SFX.invalid();
+    return;
+  }
+
+  // ===== Remi pe tablă mode: drag-on-table attempts to CLOSE the round =====
+  if (state.mode === 'tabla') {
+    attemptCloseTabla();
+    return;
+  }
+
+  // ===== Remi etalat mode: drag-on-table etalates =====
+  // Find every valid group node in handGroups and try to etalat them all together
+  const candidates = state.handGroups
+    .filter(n => n.type === 'group')
+    .map(n => inferGroupMeld(n))
+    .filter(m => m && isValidMeld(m));
+  const dropped = inferGroupMeld(groupNode);
+  if (!dropped || !isValidMeld(dropped)) {
+    toast('Grupul nu este o combinație validă.');
+    SFX.invalid();
+    return;
+  }
+
+  const you = state.players[0];
+  let toPlay = [];
+  if (!you.hasEtalat) {
+    const others = candidates.filter(m => !meldsEqual(m, dropped));
+    toPlay = [dropped];
+    let totalPts = meldPointValueFirstMeld(dropped);
+    let hasSuite = dropped.type === 'suite';
+    let hasTertaDe1 = dropped.type === 'group' && dropped.pieces.some(p => !p.joker && p.num === 1);
+
+    others.sort((a,b) => meldPointValueFirstMeld(b) - meldPointValueFirstMeld(a));
+    for (const o of others) {
+      if (totalPts >= 45 && (hasSuite || hasTertaDe1)) break;
+      toPlay.push(o);
+      totalPts += meldPointValueFirstMeld(o);
+      if (o.type === 'suite') hasSuite = true;
+      if (o.type === 'group' && o.pieces.some(p => !p.joker && p.num === 1)) hasTertaDe1 = true;
+    }
+    if (totalPts < 45 || (!hasSuite && !hasTertaDe1)) {
+      toast(`Prima etalare: ai ${totalPts}p${hasSuite || hasTertaDe1 ? '' : ', fără suită'}. Trebuie ≥45p + suită (sau terță de 1). Formează mai multe grupuri și apoi etalează.`);
+      SFX.invalid();
+      return;
+    }
+  } else {
+    toPlay = [dropped];
+  }
+
+  // Stamp placedBy
+  const stamped = toPlay.map(m => ({
+    type: m.type,
+    pieces: m.pieces.map(p => ({ ...p, placedBy: 0 }))
+  }));
+  const res = tryEtalat(stamped);
+  if (res.ok) {
+    SFX.etalat();
+    toast(toPlay.length > 1 ? `Etalat (${toPlay.length} combinații)!` : 'Etalat!');
+    render();
+  } else {
+    SFX.invalid();
+    toast(res.reason);
+  }
+}
+
+// Try to close the round in 'tabla' mode
+// Rules: hand must be entirely in valid melds, with at most 1 leftover piece (to discard).
+// Must have at least one suite OR all suites (or only suites — house rule lets you close with only suites)
+function attemptCloseTabla() {
+  const you = state.players[0];
+  const groups = state.handGroups.filter(n => n.type === 'group');
+  const singles = state.handGroups.filter(n => n.type === 'piece');
+  // Singles count: pieces NOT in a group
+  // Allow at most 1 single piece (which will be the closing discard)
+  if (singles.length > 1) {
+    toast(`Mai ai ${singles.length} piese negrupate. Trebuie să fie toate în grupuri, cu cel mult o piesă liberă.`);
+    SFX.invalid();
+    return;
+  }
+  if (groups.length === 0) {
+    toast('Nu ai nicio combinație formată.');
+    SFX.invalid();
+    return;
+  }
+  // Validate every group
+  const melds = [];
+  for (const g of groups) {
+    const meld = inferGroupMeld(g);
+    if (!meld || !isValidMeld(meld)) {
+      toast('Una dintre combinații nu este validă.');
+      SFX.invalid();
+      return;
+    }
+    melds.push(meld);
+  }
+  // Must have at least one suite (per rule "trebuie să ai cel puțin o suită" — though "se poate închide doar cu suite sau doar cu bete" — house rules vary).
+  // We follow the lenient rule: any valid melds + ≤1 free piece is enough.
+  // Check for "joc dublu" closing: if the single piece is a joker, count it as double
+  const closingPiece = singles.length === 1 ? getPieceById(singles[0].pieceId) : null;
+  const closedWithJoker = closingPiece && closingPiece.joker;
+
+  // Move everything into player's board melds and trigger close
+  // For 'tabla' mode we don't push to state.melds; instead just mark melds for display
+  you.boardMelds = melds.map(m => ({ type: m.type, pieces: m.pieces, owner: 0 }));
+  you.hasEtalat = true; // mark as "closed-eligible"
+
+  // Discard the leftover (if any) — but for tabla closing, the leftover is the "closing piece"
+  // Take the closing piece off-board (it goes to discard symbolically)
+  if (closingPiece) {
+    you.hand = you.hand.filter(x => x.id !== closingPiece.id);
+    state.discard.push(closingPiece);
+  }
+  // Clear hand pieces that are in melds (they're "on the board")
+  const meldedIds = new Set();
+  for (const m of melds) for (const p of m.pieces) meldedIds.add(p.id);
+  you.hand = you.hand.filter(x => !meldedIds.has(x.id));
+  // Now actually close
+  SFX.etalat();
+  setTimeout(() => {
+    closeRound(0, closingPiece);
+  }, 300);
+}
+
+function meldsEqual(a, b) {
+  if (a.type !== b.type) return false;
+  if (a.pieces.length !== b.pieces.length) return false;
+  const aIds = a.pieces.map(p => p.id).sort();
+  const bIds = b.pieces.map(p => p.id).sort();
+  return aIds.every((id, i) => id === bIds[i]);
+}
+
+function autoSortHand() {
+  const you = state.players[0];
+  you.hand.sort(sortPieces);
+  render();
+}
+
+function canDiscardNow() {
+  if (state.current !== 0) return false;
+  if (state.phase !== 'action' && state.phase !== 'discard') return false;
+  return true;
+}
+
+function canLayoffNow() {
+  if (state.current !== 0) return false;
+  if (state.phase !== 'action') return false;
+  if (!state.players[0].hasEtalat) return false;
+  if (state.melds.length === 0) return false;
+  return true;
+}
+
+function pieceFitsMeld(piece, meld) {
+  // Simulate inserting piece at every position to check if any keeps the meld valid
+  for (let pos = 0; pos <= meld.pieces.length; pos++) {
+    const trial = [...meld.pieces.slice(0, pos), piece, ...meld.pieces.slice(pos)];
+    if (isValidMeld({ type: meld.type, pieces: trial })) return true;
+  }
+  return false;
+}
+
+function highlightLayoffTargets(piece) {
+  if (!piece) return;
+  document.querySelectorAll('#melds .meld-row').forEach(row => {
+    const idx = parseInt(row.dataset.meldIdx);
+    if (isNaN(idx)) return;
+    if (pieceFitsMeld(piece, state.melds[idx])) {
+      row.classList.add('fit');
+    } else {
+      row.classList.add('nofit');
+    }
+  });
+}
+
+function clearLayoffHints() {
+  document.querySelectorAll('#melds .meld-row').forEach(row => {
+    row.classList.remove('fit', 'nofit', 'target', 'target-invalid');
+  });
+}
+
+function attemptDirectLayoff(piece, meldIdx) {
+  const layoffs = [{ pieceId: piece.id, meldIdx }];
+  // Stamp placedBy on the piece in hand
+  const handPiece = state.players[0].hand.find(p => p.id === piece.id);
+  if (handPiece) handPiece.placedBy = 0;
+  const res = tryLayoff(layoffs);
+  if (res.ok) {
+    SFX.layoff();
+    toast('Piesă lipită!');
+    render();
+  } else {
+    // Revert stamp if failed
+    if (handPiece) delete handPiece.placedBy;
+    SFX.invalid();
+    toast(res.reason);
+  }
+}
+
+// Desktop drop handlers on the discard pile (touch handled per-piece in touchend)
+function setupDiscardDropZone() {
+  const discardEl = document.getElementById('discardStrip');
+  discardEl.addEventListener('dragover', (e) => {
+    if (dragSrcNode === null) return;
+    const node = state.handGroups[dragSrcNode];
+    if (!node || node.type !== 'piece') return;
+    if (!canDiscardNow()) return;
+    e.preventDefault();
+    if (e.dataTransfer) e.dataTransfer.dropEffect = 'move';
+    discardEl.classList.add('drop-target');
+  });
+  discardEl.addEventListener('dragleave', (e) => {
+    if (!discardEl.contains(e.relatedTarget)) {
+      discardEl.classList.remove('drop-target');
+    }
+  });
+  discardEl.addEventListener('drop', (e) => {
+    e.preventDefault();
+    discardEl.classList.remove('drop-target');
+    if (dragSrcNode === null) return;
+    const node = state.handGroups[dragSrcNode];
+    if (!node || node.type !== 'piece') return;
+    if (!canDiscardNow()) return;
+    const piece = getPieceById(node.pieceId);
+    dragSrcNode = null;
+    if (piece) discardPiece(piece.id);
+  });
+
+  // Also set up the table area as etalat drop zone
+  const tableArea = document.getElementById('tableArea');
+  tableArea.addEventListener('dragover', (e) => {
+    if (dragSrcNode === null) return;
+    const node = state.handGroups[dragSrcNode];
+    if (!node || node.type !== 'group') return;
+    e.preventDefault();
+    if (e.dataTransfer) e.dataTransfer.dropEffect = 'move';
+    if (canEtalatNow() && isGroupValidMeld(node)) {
+      tableArea.classList.add('drop-target-table');
+    }
+  });
+  tableArea.addEventListener('dragleave', (e) => {
+    if (!tableArea.contains(e.relatedTarget)) {
+      tableArea.classList.remove('drop-target-table');
+    }
+  });
+  tableArea.addEventListener('drop', (e) => {
+    e.preventDefault();
+    tableArea.classList.remove('drop-target-table');
+    if (dragSrcNode === null) return;
+    const node = state.handGroups[dragSrcNode];
+    if (!node || node.type !== 'group') return;
+    // Don't fire if drop landed on a meld-row (groups can't layoff anyway)
+    if (e.target.closest('.meld-row')) return;
+    const srcNodeRef = node;
+    dragSrcNode = null;
+    attemptEtalatFromGroup(srcNodeRef); // will toast feedback if not allowed
+  });
+}
+
+// Attach desktop drop handlers to meld rows (called from render after melds are drawn)
+function attachMeldRowDropHandlers() {
+  document.querySelectorAll('#melds .meld-row').forEach(row => {
+    row.addEventListener('dragover', (e) => {
+      if (dragSrcNode === null) return;
+      const node = state.handGroups[dragSrcNode];
+      if (!node || node.type !== 'piece') return;
+      if (!canLayoffNow()) return;
+      const meldIdx = parseInt(row.dataset.meldIdx);
+      const piece = getPieceById(node.pieceId);
+      if (isNaN(meldIdx) || !piece) return;
+      if (pieceFitsMeld(piece, state.melds[meldIdx])) {
+        e.preventDefault();
+        if (e.dataTransfer) e.dataTransfer.dropEffect = 'move';
+        row.classList.add('target');
+      }
+    });
+    row.addEventListener('dragleave', (e) => {
+      if (!row.contains(e.relatedTarget)) {
+        row.classList.remove('target');
+      }
+    });
+    row.addEventListener('drop', (e) => {
+      e.preventDefault();
+      row.classList.remove('target');
+      if (dragSrcNode === null) return;
+      const node = state.handGroups[dragSrcNode];
+      if (!node || node.type !== 'piece') return;
+      if (!canLayoffNow()) return;
+      const meldIdx = parseInt(row.dataset.meldIdx);
+      const piece = getPieceById(node.pieceId);
+      if (isNaN(meldIdx) || !piece) return;
+      dragSrcNode = null;
+      attemptDirectLayoff(piece, meldIdx);
+    });
+  });
+}
+
+/* ---------- UI HELPERS ---------- */
+function help(msg, warn) {
+  const el = document.getElementById('helpText');
+  el.textContent = msg;
+  el.className = 'help-text' + (warn ? ' warn' : '');
+}
+function toast(msg, ms = 2200) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toast._t);
+  toast._t = setTimeout(() => t.classList.remove('show'), ms);
+}
+
+/* ---------- MELD BUILDER MODAL ---------- */
+let mbGroups = []; // groups being built
+let mbCurrent = 0; // current group index
+function openMeldModal() {
+  mbGroups = [{ type: 'auto', pieces: [] }];
+  mbCurrent = 0;
+  renderMeldModal();
+  document.getElementById('modalMeld').classList.add('show');
+}
+function renderMeldModal() {
+  const you = state.players[0];
+  const usedIds = new Set();
+  mbGroups.forEach(g => g.pieces.forEach(p => usedIds.add(p.id)));
+
+  const builder = document.getElementById('meldBuilder');
+  builder.innerHTML = '';
+  mbGroups.forEach((g, gi) => {
+    const row = document.createElement('div');
+    row.className = 'meld-row' + (gi === mbCurrent ? ' target' : '');
+    row.style.minHeight = '50px';
+    const label = document.createElement('span');
+    label.className = 'meld-owner';
+    label.textContent = `#${gi + 1}`;
+    row.appendChild(label);
+    g.pieces.forEach(p => {
+      const el = pieceEl(p, {
+        small: true,
+        onClick: () => {
+          g.pieces = g.pieces.filter(x => x.id !== p.id);
+          renderMeldModal();
+        }
+      });
+      row.appendChild(el);
+    });
+    row.onclick = (e) => {
+      if (e.target === row || e.target.classList.contains('meld-owner')) {
+        mbCurrent = gi;
+        renderMeldModal();
+      }
+    };
+    builder.appendChild(row);
+
+    // Validity preview
+    const meldType = inferMeldType(g.pieces);
+    if (g.pieces.length >= 3) {
+      const trialMeld = { type: meldType, pieces: g.pieces };
+      const isValid = isValidMeld(trialMeld);
+      const val = isValid ? meldPointValueFirstMeld(trialMeld) : 0;
+      const info = document.createElement('div');
+      info.style.fontSize = '11px';
+      info.style.paddingLeft = '40px';
+      info.style.opacity = '0.7';
+      info.style.color = isValid ? '#6cbf6c' : '#c64545';
+      info.textContent = isValid ? `✓ ${meldType === 'suite' ? 'Suită' : 'Terță'} valabilă · ${val}p` : '✗ Invalidă';
+      builder.appendChild(info);
+    }
+  });
+
+  const handDiv = document.getElementById('meldHand');
+  handDiv.innerHTML = '';
+  for (const piece of you.hand.slice().sort(sortPieces)) {
+    if (usedIds.has(piece.id)) continue;
+    handDiv.appendChild(pieceEl(piece, {
+      onClick: () => {
+        mbGroups[mbCurrent].pieces.push(piece);
+        // Sort pieces for suite
+        const t = inferMeldType(mbGroups[mbCurrent].pieces);
+        if (t === 'suite') {
+          mbGroups[mbCurrent].pieces.sort((a,b) => {
+            if (a.joker) return 1;
+            if (b.joker) return -1;
+            return a.num - b.num;
+          });
+        }
+        renderMeldModal();
+      }
+    }));
+  }
+}
+
+function inferMeldType(pieces) {
+  const reals = pieces.filter(p => !p.joker);
+  if (reals.length === 0) return 'group';
+  const allSameNum = reals.every(p => p.num === reals[0].num);
+  if (allSameNum) return 'group';
+  return 'suite';
+}
+
+/* ---------- LAYOFF MODAL ---------- */
+let layPlan = []; // [{pieceId, meldIdx}]
+let laySelectedPiece = null;
+function openLayModal() {
+  layPlan = [];
+  laySelectedPiece = null;
+  renderLayModal();
+  document.getElementById('modalLay').classList.add('show');
+}
+function renderLayModal() {
+  const you = state.players[0];
+  const usedIds = new Set(layPlan.map(l => l.pieceId));
+
+  const meldsDiv = document.getElementById('layMelds');
+  meldsDiv.innerHTML = '';
+  for (let i = 0; i < state.melds.length; i++) {
+    const meld = state.melds[i];
+    const row = document.createElement('div');
+    row.className = 'meld-row';
+    const lbl = document.createElement('span');
+    lbl.className = 'meld-owner';
+    lbl.textContent = state.players[meld.owner].name;
+    row.appendChild(lbl);
+    for (const piece of meld.pieces) {
+      row.appendChild(pieceEl(piece, { small: true }));
+    }
+    // Show any planned additions
+    for (const lo of layPlan.filter(l => l.meldIdx === i)) {
+      const piece = you.hand.find(x => x.id === lo.pieceId);
+      if (piece) {
+        const el = pieceEl(piece, { small: true });
+        el.style.outline = '2px solid #6cbf6c';
+        row.appendChild(el);
+      }
+    }
+    row.onclick = () => {
+      if (laySelectedPiece) {
+        // Try to layoff
+        const trialPlan = [...layPlan, { pieceId: laySelectedPiece, meldIdx: i }];
+        // Simulate to check validity
+        const simResult = simulateLayoffs(trialPlan, state.melds, you.hand);
+        if (simResult.ok) {
+          layPlan.push({ pieceId: laySelectedPiece, meldIdx: i });
+          laySelectedPiece = null;
+          renderLayModal();
+        } else {
+          toast(simResult.reason);
+        }
+      } else {
+        toast('Selectează întâi o piesă.');
+      }
+    };
+    meldsDiv.appendChild(row);
+  }
+
+  const handDiv = document.getElementById('layHand');
+  handDiv.innerHTML = '';
+  for (const piece of you.hand.slice().sort(sortPieces)) {
+    if (usedIds.has(piece.id)) continue;
+    handDiv.appendChild(pieceEl(piece, {
+      selected: laySelectedPiece === piece.id,
+      onClick: () => {
+        laySelectedPiece = piece.id;
+        renderLayModal();
+      }
+    }));
+  }
+}
+
+function simulateLayoffs(plan, melds, hand) {
+  const meldsCopy = melds.map(m => ({ ...m, pieces: [...m.pieces] }));
+  for (const lo of plan) {
+    const piece = hand.find(x => x.id === lo.pieceId);
+    if (!piece) return { ok: false, reason: 'Piesă inexistentă.' };
+    const meld = meldsCopy[lo.meldIdx];
+    let placedOk = false;
+    for (let pos = 0; pos <= meld.pieces.length; pos++) {
+      const trial = [...meld.pieces.slice(0, pos), piece, ...meld.pieces.slice(pos)];
+      if (isValidMeld({ type: meld.type, pieces: trial })) {
+        meld.pieces = trial;
+        placedOk = true; break;
+      }
+    }
+    if (!placedOk) return { ok: false, reason: 'Piesa nu se potrivește.' };
+  }
+  return { ok: true };
+}
+
+/* ---------- EVENT BINDINGS ---------- */
+document.getElementById('stock').onclick = () => {
+  if (state.current === 0 && state.phase === 'draw') drawFromStock();
+};
+
+document.getElementById('btnMeldNew').onclick = () => {
+  mbGroups.push({ type: 'auto', pieces: [] });
+  mbCurrent = mbGroups.length - 1;
+  renderMeldModal();
+};
+document.getElementById('btnMeldClear').onclick = () => {
+  mbGroups = [{ type: 'auto', pieces: [] }];
+  mbCurrent = 0;
+  renderMeldModal();
+};
+document.getElementById('btnMeldCancel').onclick = () => {
+  document.getElementById('modalMeld').classList.remove('show');
+};
+document.getElementById('btnMeldConfirm').onclick = () => {
+  const valid = [];
+  for (const g of mbGroups) {
+    if (g.pieces.length === 0) continue;
+    const type = inferMeldType(g.pieces);
+    if (type === 'suite') {
+      g.pieces.sort((a,b) => {
+        if (a.joker) return 1;
+        if (b.joker) return -1;
+        return a.num - b.num;
+      });
+    }
+    const m = { type, pieces: g.pieces };
+    if (!isValidMeld(m)) {
+      toast('Una dintre combinații e invalidă.');
+      return;
+    }
+    valid.push(m);
+  }
+  if (valid.length === 0) { toast('Nicio combinație construită.'); return; }
+  // Stamp placedBy
+  for (const m of valid) {
+    m.pieces = m.pieces.map(p => ({ ...p, placedBy: state.current }));
+  }
+  const res = tryEtalat(valid);
+  if (res.ok) {
+    document.getElementById('modalMeld').classList.remove('show');
+    help('Etalat! Acum aruncă o piesă sau lipește.');
+    render();
+  } else {
+    toast(res.reason);
+  }
+};
+
+document.getElementById('btnLayCancel').onclick = () => {
+  document.getElementById('modalLay').classList.remove('show');
+};
+document.getElementById('btnLayDone').onclick = () => {
+  if (layPlan.length === 0) {
+    document.getElementById('modalLay').classList.remove('show');
+    return;
+  }
+  // Stamp placedBy
+  for (const lo of layPlan) {
+    const piece = state.players[0].hand.find(x => x.id === lo.pieceId);
+    if (piece) piece.placedBy = 0;
+  }
+  const res = tryLayoff(layPlan);
+  if (res.ok) {
+    toast('Piese lipite!');
+    document.getElementById('modalLay').classList.remove('show');
+    render();
+  } else {
+    toast(res.reason);
+  }
+};
+
+document.getElementById('btnRules').onclick = () => document.getElementById('modalRules').classList.add('show');
+document.getElementById('btnSound').onclick = () => {
+  soundEnabled = !soundEnabled;
+  if (soundEnabled) initAudio();
+  document.getElementById('btnSound').textContent = soundEnabled ? '🔊' : '🔇';
+  if (soundEnabled) SFX.pick();
+};
+document.getElementById('btnSort').onclick = () => autoSortHand();
+document.getElementById('btnRulesClose').onclick = () => document.getElementById('modalRules').classList.remove('show');
+document.getElementById('btnScore').onclick = () => {
+  let html = '<table class="scores"><thead><tr><th>Jucător</th><th class="num">Total</th></tr></thead><tbody>';
+  for (let i = 0; i < state.players.length; i++) {
+    html += `<tr><td>${state.players[i].name}</td><td class="num">${state.totals[i] || 0}</td></tr>`;
+  }
+  html += '</tbody></table>';
+  document.getElementById('scoreContent').innerHTML = html;
+  document.getElementById('modalScore').classList.add('show');
+};
+document.getElementById('btnScoreClose').onclick = () => document.getElementById('modalScore').classList.remove('show');
+
+document.getElementById('btnNew').onclick = () => {
+  state.totals = [];
+  state.round = 1;
+  document.getElementById('modalSetup').classList.add('show');
+};
+document.getElementById('btnEndNew').onclick = () => {
+  state.totals = [];
+  state.round = 1;
+  document.getElementById('modalEnd').classList.remove('show');
+  document.getElementById('modalSetup').classList.add('show');
+};
+document.getElementById('btnEndNext').onclick = () => {
+  state.round++;
+  document.getElementById('modalEnd').classList.remove('show');
+  deal(state.numPlayers, state.difficulty, state.mode);
+  startTurn();
+};
+
+// Setup selectors
+let setupPlayers = 3, setupDiff = 'med', setupMode = 'etalat', setupSound = 'on';
+document.querySelectorAll('#optMode button').forEach(b => {
+  b.onclick = () => {
+    document.querySelectorAll('#optMode button').forEach(x => x.classList.remove('sel'));
+    b.classList.add('sel');
+    setupMode = b.dataset.v;
+    const info = document.getElementById('modeInfo');
+    if (info) {
+      info.textContent = setupMode === 'tabla'
+        ? 'Pe tablă: formezi combinațiile pe tabla ta (vizibile doar ție) și închizi când mâna ta e numai combinații + max 1 piesă. Câștigătorul primește 250p de la fiecare (500p cu joker).'
+        : 'Etalat: cobori combinațiile pe masă pe măsură ce le formezi. Prima etalare ≥45p + suită. Punctele se calculează la sfârșit.';
+    }
+  };
+});
+document.querySelectorAll('#optPlayers button').forEach(b => {
+  b.onclick = () => {
+    document.querySelectorAll('#optPlayers button').forEach(x => x.classList.remove('sel'));
+    b.classList.add('sel');
+    setupPlayers = parseInt(b.dataset.v);
+  };
+});
+document.querySelectorAll('#optDiff button').forEach(b => {
+  b.onclick = () => {
+    document.querySelectorAll('#optDiff button').forEach(x => x.classList.remove('sel'));
+    b.classList.add('sel');
+    setupDiff = b.dataset.v;
+  };
+});
+document.querySelectorAll('#optSound button').forEach(b => {
+  b.onclick = () => {
+    document.querySelectorAll('#optSound button').forEach(x => x.classList.remove('sel'));
+    b.classList.add('sel');
+    setupSound = b.dataset.v;
+  };
+});
+document.getElementById('btnStart').onclick = () => {
+  document.getElementById('modalSetup').classList.remove('show');
+  state.totals = new Array(setupPlayers).fill(0);
+  state.round = 1;
+  soundEnabled = (setupSound === 'on');
+  if (soundEnabled) initAudio();
+  deal(setupPlayers, setupDiff, setupMode);
+  startTurn();
+};
+
+// Show setup on load
+document.getElementById('modalSetup').classList.add('show');
+setupDiscardDropZone();
+
+// Service worker for PWA (inline)
+if ('serviceWorker' in navigator) {
+  const swCode = `
+    const CACHE='remi-v1';
+    self.addEventListener('install', e => self.skipWaiting());
+    self.addEventListener('activate', e => e.waitUntil(clients.claim()));
+    self.addEventListener('fetch', e => {
+      e.respondWith(fetch(e.request).catch(() => caches.match(e.request)));
+    });
+  `;
+  const blob = new Blob([swCode], { type: 'application/javascript' });
+  const url = URL.createObjectURL(blob);
+  navigator.serviceWorker.register(url).catch(() => {});
+}
+</script>
+</body>
+</html>
