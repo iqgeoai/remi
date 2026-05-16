@@ -77,7 +77,61 @@ public final class GameEngine {
         s.doubleGame(), s.closed(), s.totals(), s.seed());
     return accept(ns, new DomainEvent.DiscardTaken(s.current(), idx, taken.size()));
   }
-  private static ActionResult applyEtalat(GameState s, Action.Etalat a)               { throw new UnsupportedOperationException(); }
+  private static ActionResult applyEtalat(GameState s, Action.Etalat a) {
+    if (s.phase() != Phase.ACTION && s.phase() != Phase.DISCARD)
+      return reject(RejectReason.WRONG_PHASE, "Nu poți etala acum.");
+    Player p = s.players().get(s.current());
+
+    java.util.List<Meld> builtMelds = new java.util.ArrayList<>();
+    java.util.Set<Integer> usedIds = new java.util.HashSet<>();
+    java.util.Map<Integer, Piece> handIdx = new java.util.HashMap<>();
+    for (Piece piece : p.hand()) handIdx.put(piece.id(), piece);
+
+    for (MeldProposal mp : a.melds()) {
+      java.util.List<Piece> pieces = new java.util.ArrayList<>();
+      for (int pid : mp.pieceIds()) {
+        if (!handIdx.containsKey(pid) || usedIds.contains(pid))
+          return reject(RejectReason.PIECE_NOT_IN_HAND, "Piesă inexistentă în mână.");
+        pieces.add(handIdx.get(pid));
+        usedIds.add(pid);
+      }
+      java.util.Map<Integer, Integer> placedBy = new java.util.HashMap<>();
+      for (Piece piece : pieces) placedBy.put(piece.id(), s.current());
+      Meld m = new Meld(s.current(), mp.type(), pieces, placedBy);
+      if (!MeldValidator.isValid(m))
+        return reject(RejectReason.INVALID_MELD, "Combinație invalidă.");
+      builtMelds.add(m);
+    }
+
+    if (!p.hasEtalat()) {
+      int totalFirst = builtMelds.stream().mapToInt(m -> m.pieces().stream()
+          .mapToInt(piece -> Scoring.firstMeldPieceValue(piece, m)).sum()).sum();
+      boolean hasSuite = builtMelds.stream().anyMatch(m -> m.type() == MeldType.SUITE);
+      boolean has1sGroup = builtMelds.stream().anyMatch(m ->
+          m.type() == MeldType.GROUP && m.pieces().stream().anyMatch(pp -> !pp.isJoker() && pp.num() == 1));
+      if (!hasSuite && !has1sGroup)
+        return reject(RejectReason.FIRST_MELD_NEEDS_SUITE_OR_1S, "Prima etalare necesită o suită sau o terță de 1.");
+      if (totalFirst < 45)
+        return reject(RejectReason.FIRST_MELD_TOO_FEW_POINTS, "Prima etalare are " + totalFirst + "p < 45p.");
+    }
+
+    var newHand = new java.util.ArrayList<>(p.hand());
+    newHand.removeIf(piece -> usedIds.contains(piece.id()));
+    Integer newMustUse = p.mustUsePieceId();
+    if (newMustUse != null && usedIds.contains(newMustUse)) newMustUse = null;
+
+    var newPlayer = new Player(p.name(), p.isBot(), newHand, true, p.calledAtu(), p.announced(), newMustUse);
+    var newPlayers = new java.util.ArrayList<>(s.players()); newPlayers.set(s.current(), newPlayer);
+    var newMelds = new java.util.ArrayList<>(s.melds()); newMelds.addAll(builtMelds);
+
+    int totalPts = builtMelds.stream().mapToInt(m -> m.pieces().stream()
+        .mapToInt(piece -> Scoring.firstMeldPieceValue(piece, m)).sum()).sum();
+
+    GameState ns = new GameState(s.id(), newPlayers, s.stock(), s.discard(), s.atu(), newMelds,
+        s.current(), s.phase(), s.drewFrom(), s.turnTaken(), s.round(), s.mode(), s.difficulty(),
+        s.doubleGame(), s.closed(), s.totals(), s.seed());
+    return accept(ns, new DomainEvent.PlayerEtalat(s.current(), totalPts));
+  }
   private static ActionResult applyLayoff(GameState s, Action.Layoff a)               { throw new UnsupportedOperationException(); }
   private static ActionResult applyDiscard(GameState s, Action.Discard a)             { throw new UnsupportedOperationException(); }
   private static ActionResult applyForceAuto(GameState s, Action.ForceAutoAction a)   { throw new UnsupportedOperationException(); }
