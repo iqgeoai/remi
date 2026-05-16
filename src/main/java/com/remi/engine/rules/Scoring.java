@@ -60,6 +60,27 @@ public final class Scoring {
   }
 
   public static List<RoundResult> closeRound(GameState state, int closerIdx, Piece lastDiscarded) {
+    if (state.mode() == Mode.TABLA) {
+      return closeRoundTabla(state, closerIdx, lastDiscarded);
+    }
+    return closeRoundEtalat(state, closerIdx, lastDiscarded);
+  }
+
+  private static List<RoundResult> closeRoundTabla(GameState state, int closerIdx, Piece lastDiscarded) {
+    boolean closedWithJoker = lastDiscarded != null && lastDiscarded.isJoker();
+    int baseAmount = closedWithJoker ? 500 : 250;
+    int numOthers = state.players().size() - 1;
+    List<RoundResult> results = new java.util.ArrayList<>();
+    for (int i = 0; i < state.players().size(); i++) {
+      Player p = state.players().get(i);
+      int base = (i == closerIdx) ? baseAmount * numOthers : -baseAmount;
+      if (state.doubleGame()) base *= 2;
+      results.add(new RoundResult(i, p.name(), base, 0, p.hand().size()));
+    }
+    return results;
+  }
+
+  private static List<RoundResult> closeRoundEtalat(GameState state, int closerIdx, Piece lastDiscarded) {
     List<RoundResult> results = new java.util.ArrayList<>();
     boolean closedWithJoker = lastDiscarded != null && lastDiscarded.isJoker();
 
@@ -93,9 +114,9 @@ public final class Scoring {
         pts *= 2;
       }
 
-      results.add(new RoundResult(i, p.name(), pts,
-          (int) state.melds().stream().filter(m -> m.owner() == p.hashCode()).count(),
-          p.hand().size()));
+      final int playerIdx = i;
+      int melded = (int) state.melds().stream().filter(m -> m.owner() == playerIdx).count();
+      results.add(new RoundResult(i, p.name(), pts, melded, p.hand().size()));
     }
     return results;
   }
