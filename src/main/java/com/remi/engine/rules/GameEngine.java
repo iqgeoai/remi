@@ -251,5 +251,34 @@ public final class GameEngine {
     evts.add(new DomainEvent.StockExhausted());
     return closeRound(s, s.current(), null, evts);
   }
-  private static ActionResult applyForceAuto(GameState s, Action.ForceAutoAction a)   { throw new UnsupportedOperationException(); }
+  private static ActionResult applyForceAuto(GameState s, Action.ForceAutoAction a) {
+    if (s.phase() == Phase.DRAW) {
+      if (s.stock().isEmpty()) return endRoundStockEmpty(s, new java.util.ArrayList<>());
+      return applyDrawFromStock(s, new Action.DrawFromStock(s.current()));
+    }
+    Player p = s.players().get(s.current());
+    if (p.hand().isEmpty()) return reject(RejectReason.WRONG_PHASE, "Mână goală.");
+
+    Piece pick = null;
+    for (Piece piece : p.hand()) {
+      if (piece.isJoker()) continue;
+      if (p.mustUsePieceId() != null && piece.id() == p.mustUsePieceId()) continue;
+      if (pick == null || Scoring.finalPieceValue(piece) > Scoring.finalPieceValue(pick)) pick = piece;
+    }
+    if (pick == null) {
+      for (Piece piece : p.hand()) {
+        if (p.mustUsePieceId() != null && piece.id() == p.mustUsePieceId()) continue;
+        if (pick == null || Scoring.finalPieceValue(piece) > Scoring.finalPieceValue(pick)) pick = piece;
+      }
+    }
+    if (pick == null) pick = p.hand().get(0); // give up mustUse
+
+    // Clear mustUse and call discard
+    var newPlayer = new Player(p.name(), p.isBot(), p.hand(), p.hasEtalat(), p.calledAtu(), p.announced(), null);
+    var newPlayers = new java.util.ArrayList<>(s.players()); newPlayers.set(s.current(), newPlayer);
+    GameState cleared = new GameState(s.id(), newPlayers, s.stock(), s.discard(), s.atu(), s.melds(),
+        s.current(), s.phase(), s.drewFrom(), s.turnTaken(), s.round(), s.mode(), s.difficulty(),
+        s.doubleGame(), s.closed(), s.totals(), s.seed());
+    return applyDiscard(cleared, new Action.Discard(s.current(), pick.id()));
+  }
 }
