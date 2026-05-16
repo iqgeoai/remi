@@ -33,6 +33,29 @@ public final class MeldValidator {
   }
 
   private static boolean isValidSuite(List<Piece> pieces) {
-    return false; // implemented in next task
+    if (pieces.size() > 13) return false;
+    List<Piece> reals = pieces.stream().filter(p -> !p.isJoker()).toList();
+    com.remi.engine.domain.Color color = reals.get(0).color();
+    if (!reals.stream().allMatch(p -> p.color() == color)) return false;
+
+    Integer base = null;
+    for (int i = 0; i < pieces.size(); i++) {
+      Piece p = pieces.get(i);
+      if (p.isJoker()) continue;
+      int candidate = p.num() - i;
+      if (base == null) { base = candidate; continue; }
+      if (candidate == base) continue;
+      if ((p.num() + 13 - i) == base) continue;
+      return false;
+    }
+    if (base == null) return false;
+
+    for (int i = 0; i < pieces.size(); i++) {
+      int n = base + i;
+      if (n > 14) return false;
+      if (n == 14) continue; // wrap (e.g., 12-13-1)
+      if (n < 1) return false;
+    }
+    return true;
   }
 }
