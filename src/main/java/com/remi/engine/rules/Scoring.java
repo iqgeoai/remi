@@ -58,4 +58,45 @@ public final class Scoring {
     }
     return null;
   }
+
+  public static List<RoundResult> closeRound(GameState state, int closerIdx, Piece lastDiscarded) {
+    List<RoundResult> results = new java.util.ArrayList<>();
+    boolean closedWithJoker = lastDiscarded != null && lastDiscarded.isJoker();
+
+    for (int i = 0; i < state.players().size(); i++) {
+      Player p = state.players().get(i);
+      int pts = 0;
+
+      for (Meld m : state.melds()) {
+        for (Piece piece : m.pieces()) {
+          Integer placedBy = m.placedBy().get(piece.id());
+          int actualPlacer = placedBy != null ? placedBy : m.owner();
+          if (actualPlacer == i) pts += finalPieceValue(piece);
+        }
+      }
+
+      int handPts = p.hand().stream().mapToInt(Scoring::finalPieceValue).sum();
+      pts -= handPts;
+
+      if (!p.hasEtalat()) {
+        pts = -100;
+        if (p.calledAtu()) pts += 50;
+      } else {
+        if (i == closerIdx) pts += 50;
+        if (p.calledAtu()) pts += 50;
+      }
+
+      if (state.mode() == Mode.ETALAT && i == closerIdx && closedWithJoker) {
+        pts *= 2;
+      }
+      if (state.doubleGame()) {
+        pts *= 2;
+      }
+
+      results.add(new RoundResult(i, p.name(), pts,
+          (int) state.melds().stream().filter(m -> m.owner() == p.hashCode()).count(),
+          p.hand().size()));
+    }
+    return results;
+  }
 }
