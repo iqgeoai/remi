@@ -1,0 +1,9 @@
+jwt:
+  secret: test-only-secret-must-be-at-least-256-bits-long-or-jjwt-will-complain-x
+  access-ttl: PT15M
+  refresh-ttl: P30D
+
+mail:
+  from: test@remi.local
+  verification-link-base: http://localhost:8080/test/verify
+  reset-link-base: http://localhost:8080/test/reset
