@@ -29,7 +29,20 @@ public final class GameEngine {
   }
 
   // Stubs — implemented in subsequent tasks
-  private static ActionResult applyDrawFromStock(GameState s, Action.DrawFromStock a) { throw new UnsupportedOperationException(); }
+  private static ActionResult applyDrawFromStock(GameState s, Action.DrawFromStock a) {
+    if (s.phase() != Phase.DRAW) return reject(RejectReason.WRONG_PHASE, "Nu poți trage acum.");
+    if (s.stock().isEmpty()) return reject(RejectReason.STOCK_EMPTY, "Grămada este goală.");
+    var newStock = new java.util.ArrayList<>(s.stock());
+    Piece top = newStock.remove(newStock.size() - 1);
+    Player p = s.players().get(s.current());
+    var newHand = new java.util.ArrayList<>(p.hand()); newHand.add(top);
+    var newPlayer = new Player(p.name(), p.isBot(), newHand, p.hasEtalat(), p.calledAtu(), p.announced(), p.mustUsePieceId());
+    var newPlayers = new java.util.ArrayList<>(s.players()); newPlayers.set(s.current(), newPlayer);
+    GameState ns = new GameState(s.id(), newPlayers, newStock, s.discard(), s.atu(), s.melds(),
+        s.current(), Phase.ACTION, DrawSource.STOCK, s.turnTaken(), s.round(), s.mode(), s.difficulty(),
+        s.doubleGame(), s.closed(), s.totals(), s.seed());
+    return accept(ns, new DomainEvent.CardDrawn(s.current(), DrawSource.STOCK));
+  }
   private static ActionResult applyTakeDiscard(GameState s, Action.TakeDiscard a)     { throw new UnsupportedOperationException(); }
   private static ActionResult applyEtalat(GameState s, Action.Etalat a)               { throw new UnsupportedOperationException(); }
   private static ActionResult applyLayoff(GameState s, Action.Layoff a)               { throw new UnsupportedOperationException(); }
