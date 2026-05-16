@@ -1,0 +1,75 @@
+package com.remi.service;
+
+import com.remi.engine.ai.Bot;
+import com.remi.engine.domain.*;
+import com.remi.engine.rules.Dealer;
+import com.remi.engine.rules.GameEngine;
+import com.remi.persistence.GameEntity;
+import com.remi.persistence.GameRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import java.util.UUID;
+
+@Service
+public class GameService {
+  private static final Logger log = LoggerFactory.getLogger(GameService.class);
+  private static final int MAX_BOT_STEPS = 100;
+
+  private final GameRepository repo;
+  public GameService(GameRepository repo) { this.repo = repo; }
+
+  @Transactional
+  public GameState create(int numPlayers, Mode mode, Difficulty difficulty, Long seed) {
+    long actualSeed = (seed != null) ? seed : System.nanoTime();
+    GameState s = Dealer.deal(numPlayers, mode, difficulty, actualSeed);
+    repo.save(new GameEntity(s.id(), s));
+    log.info("Created game {} numPlayers={} mode={} seed={}", s.id(), numPlayers, mode, actualSeed);
+    return s;
+  }
+
+  @Transactional(readOnly = true)
+  public GameState get(UUID gameId) {
+    return repo.findById(gameId).orElseThrow(() -> new GameNotFoundException(gameId)).getState();
+  }
+
+  @Transactional
+  public GameState applyAction(UUID gameId, Action action) {
+    GameEntity entity = repo.findById(gameId).orElseThrow(() -> new GameNotFoundException(gameId));
+    ActionResult result = GameEngine.apply(entity.getState(), action);
+    return switch (result) {
+      case ActionResult.Rejected r -> {
+        log.warn("Rejected action on game {} code={}", gameId, r.code());
+        throw new GameRuleException(r.code(), r.message());
+      }
+      case ActionResult.Accepted a -> {
+        entity.setState(a.newState());
+        repo.save(entity);
+        log.debug("Action {} accepted on game {}", action.getClass().getSimpleName(), gameId);
+        yield a.newState();
+      }
+    };
+  }
+
+  @Transactional
+  public GameState runBotsUntilHuman(UUID gameId) {
+    GameEntity entity = repo.findById(gameId).orElseThrow(() -> new GameNotFoundException(gameId));
+    GameState state = entity.getState();
+    int steps = 0;
+    while (!state.closed() && state.players().get(state.current()).isBot()) {
+      if (steps++ >= MAX_BOT_STEPS) {
+        throw new IllegalEngineStateException("Bot loop exceeded " + MAX_BOT_STEPS + " steps on game " + gameId);
+      }
+      Action a = Bot.decide(state, state.current());
+      ActionResult r = GameEngine.apply(state, a);
+      if (r instanceof ActionResult.Rejected rej) {
+        throw new IllegalEngineStateException("Bot proposed rejected action: " + rej.code() + " — " + rej.message());
+      }
+      state = ((ActionResult.Accepted) r).newState();
+    }
+    entity.setState(state);
+    repo.save(entity);
+    return state;
+  }
+}
