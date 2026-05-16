@@ -41,4 +41,14 @@ class MeldFinderTest {
     assertThat(los.get(0).pieceId()).isEqualTo(p4.id());
     assertThat(los.get(0).meldIdx()).isEqualTo(0);
   }
+  @Test void findLayoffsRespectsCapacityFromPriorLayoffs() {
+    // Group of 7s with 3 colors; hand has 4th color + joker.
+    // Without the fix, findLayoffs would propose both; engine would reject the joker.
+    Piece p7y = p(7, Color.YELLOW);
+    Piece j = joker();
+    Meld m = MeldBuilder.group(p(7, Color.RED), p(7, Color.BLUE), p(7, Color.BLACK)).owner(0).build();
+    List<LayoffProposal> los = MeldFinder.findLayoffs(List.of(p7y, j), List.of(m));
+    // Only ONE of them can be placed (the second would push to 5 pieces, exceeding group max).
+    assertThat(los).hasSize(1);
+  }
 }

@@ -121,10 +121,12 @@ public final class MeldFinder {
   public static List<LayoffProposal> findLayoffs(List<Piece> hand, List<Meld> melds) {
     List<LayoffProposal> out = new ArrayList<>();
     Set<Integer> usedIds = new HashSet<>();
-    for (int mi = 0; mi < melds.size(); mi++) {
-      Meld meld = melds.get(mi);
+    // Working copy of melds — updated as we accept layoffs
+    List<Meld> working = new ArrayList<>(melds);
+    for (int mi = 0; mi < working.size(); mi++) {
       for (Piece piece : hand) {
         if (usedIds.contains(piece.id())) continue;
+        Meld meld = working.get(mi);
         for (int pos = 0; pos <= meld.pieces().size(); pos++) {
           List<Piece> trial = new ArrayList<>(meld.pieces());
           trial.add(pos, piece);
@@ -132,6 +134,7 @@ public final class MeldFinder {
           if (MeldValidator.isValid(candidate)) {
             out.add(new LayoffProposal(piece.id(), mi));
             usedIds.add(piece.id());
+            working.set(mi, candidate);  // update working state so subsequent iterations see it
             break;
           }
         }

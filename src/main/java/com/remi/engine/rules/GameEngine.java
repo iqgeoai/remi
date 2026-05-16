@@ -130,7 +130,13 @@ public final class GameEngine {
     GameState ns = new GameState(s.id(), newPlayers, s.stock(), s.discard(), s.atu(), newMelds,
         s.current(), s.phase(), s.drewFrom(), s.turnTaken(), s.round(), s.mode(), s.difficulty(),
         s.doubleGame(), s.closed(), s.totals(), s.seed());
-    return accept(ns, new DomainEvent.PlayerEtalat(s.current(), totalPts));
+    java.util.List<DomainEvent> evts = new java.util.ArrayList<>();
+    evts.add(new DomainEvent.PlayerEtalat(s.current(), totalPts));
+    // If etalat emptied the hand (player just won by playing everything), close the round.
+    if (newHand.isEmpty()) {
+      return closeRound(ns, s.current(), null, evts);
+    }
+    return new ActionResult.Accepted(ns, evts);
   }
   private static ActionResult applyLayoff(GameState s, Action.Layoff a) {
     if (s.phase() != Phase.ACTION && s.phase() != Phase.DISCARD)
@@ -172,6 +178,10 @@ public final class GameEngine {
     java.util.List<DomainEvent> evts = new java.util.ArrayList<>();
     for (LayoffProposal lo : a.layoffs())
       evts.add(new DomainEvent.LayoffPlayed(s.current(), lo.meldIdx(), lo.pieceId()));
+    // If layoff emptied the hand, close the round (mirrors JS endTurn check).
+    if (newHand.isEmpty()) {
+      return closeRound(ns, s.current(), null, evts);
+    }
     return new ActionResult.Accepted(ns, evts);
   }
 
