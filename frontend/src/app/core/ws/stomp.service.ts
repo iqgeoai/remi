@@ -1,8 +1,8 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { Client, IMessage, StompSubscription } from '@stomp/stompjs';
 import { Observable, Subject, BehaviorSubject } from 'rxjs';
 import * as SockJS from 'sockjs-client';
-import { environment } from '../../../environments/environment';
+import { WS_URL } from '../config/api-url.tokens';
 import { WsConnectionState } from './ws-state';
 
 interface ActiveSubscription<T = unknown> {
@@ -18,6 +18,7 @@ export class StompService {
   private readonly state$ = new BehaviorSubject<WsConnectionState>('DISCONNECTED');
   private readonly activeSubs = new Map<string, ActiveSubscription>();
   private accessToken: string | null = null;
+  private readonly url = inject(WS_URL);
 
   /** Public: observable of connection state. */
   readonly connectionState$ = this.state$.asObservable();
@@ -29,7 +30,7 @@ export class StompService {
     }
     this.state$.next('CONNECTING');
     this.client = new Client({
-      webSocketFactory: () => new SockJS(environment.wsUrl),
+      webSocketFactory: () => new SockJS(this.url),
       connectHeaders: { Authorization: `Bearer ${accessToken}` },
       reconnectDelay: 1000,           // start at 1s
       heartbeatIncoming: 4000,

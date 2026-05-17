@@ -1,12 +1,15 @@
 import { TestBed } from '@angular/core/testing';
 import { StompService } from './stomp.service';
+import { WS_URL } from '../config/api-url.tokens';
 
 // Lightweight Client mock injected via Object.defineProperty (we don't try to test reconnect/network — that's covered by manual smoke test)
 describe('StompService', () => {
   let service: StompService;
 
   beforeEach(() => {
-    TestBed.configureTestingModule({});
+    TestBed.configureTestingModule({
+      providers: [{ provide: WS_URL, useValue: '/ws' }],
+    });
     service = TestBed.inject(StompService);
   });
 
