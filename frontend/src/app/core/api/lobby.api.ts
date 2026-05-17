@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { environment } from '../../../environments/environment';
+import { API_URL } from '../config/api-url.tokens';
 import { LobbyGame, GameView, Action, GameVisibility, Mode, Difficulty } from '../models';
 
 export interface CreateGameRequest {
@@ -14,7 +14,7 @@ export interface CreateGameRequest {
 @Injectable({ providedIn: 'root' })
 export class LobbyApi {
   private readonly http = inject(HttpClient);
-  private readonly base = environment.apiUrl;
+  private readonly base = inject(API_URL);
 
   create(req: CreateGameRequest): Observable<LobbyGame> {
     return this.http.post<LobbyGame>(`${this.base}/games`, req);
