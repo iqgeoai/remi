@@ -87,6 +87,56 @@ com.remi.config        ← Spring config, Jackson polymorphic mixins
 
 The engine is deliberately Spring-free so it can be reused later (replay/event log, bot training, offline mode in mobile builds).
 
+## Auth (Stage 2)
+
+Stage 2 adds user accounts. Required env vars for prod (SMTP):
+
+```bash
+export JWT_SECRET="your-256-bit-secret-rotate-on-compromise"
+export SMTP_HOST=smtp.mailtrap.io
+export SMTP_PORT=587
+export SMTP_USER=...
+export SMTP_PASS=...
+export MAIL_FROM=noreply@remi.example
+export MAIL_VERIFICATION_LINK_BASE=https://app.remi.example/verify
+export MAIL_RESET_LINK_BASE=https://app.remi.example/reset
+```
+
+### Try the auth flow
+
+```bash
+# Register
+curl -X POST http://localhost:8080/api/auth/register \
+  -H 'Content-Type: application/json' \
+  -d '{"email":"alice@example.com","username":"alice","password":"passwordxx"}'
+
+# (Check email for verification token, then:)
+curl -X POST http://localhost:8080/api/auth/verify-email \
+  -H 'Content-Type: application/json' \
+  -d '{"token":"<token-from-email>"}'
+
+# Login
+curl -X POST http://localhost:8080/api/auth/login \
+  -H 'Content-Type: application/json' \
+  -d '{"emailOrUsername":"alice","password":"passwordxx"}'
+# → {"accessToken":"...","refreshToken":"...","accessExpiresAt":"..."}
+
+# Authenticated request
+curl http://localhost:8080/api/users/me -H "Authorization: Bearer <accessToken>"
+
+# Refresh
+curl -X POST http://localhost:8080/api/auth/refresh \
+  -H 'Content-Type: application/json' \
+  -d '{"refreshToken":"<refreshToken>"}'
+
+# Logout
+curl -X POST http://localhost:8080/api/auth/logout \
+  -H 'Content-Type: application/json' \
+  -d '{"refreshToken":"<refreshToken>"}'
+```
+
+The Stage 1 `/api/dev/games/*` endpoints remain accessible without auth (whitelist in `SecurityConfig`). They will be replaced by authenticated `/api/games/*` in Stage 3.
+
 ## Source of truth for game rules
 
 `assets/remi.html` — the original single-player HTML implementation. When in doubt, the JS implementation wins. The Java port is faithful (modulo two bug fixes caught by jqwik properties: `findLayoffs` capacity tracking, and `closeRound` when etalat/layoff empties the hand).
