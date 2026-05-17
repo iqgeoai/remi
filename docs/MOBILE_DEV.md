@@ -44,9 +44,20 @@ open ios/App/App.xcodeproj
    npm start -- --host 0.0.0.0
    ```
 
-3. **Capacitor live reload run:**
-   - iOS: `npm run cap:ios`
-   - Android: `npm run cap:android`
+3. **Capacitor live reload run** (target UUID is required — Ionic CLI does not pick one automatically):
+
+   First, list targets:
+   ```bash
+   npm run cap:ios:targets        # or cap:android:targets
+   ```
+   Pick a simulator UUID from the rightmost column (e.g. `8BDA3EBA-…` for iPhone 17). Then:
+   ```bash
+   npm run cap:ios -- --target=<sim-uuid>
+   # or
+   npm run cap:android -- --target=<avd-uuid>
+   ```
+
+   The script auto-detects your Wi-Fi LAN IP via `ipconfig getifaddr en0` and passes it as `--public-host`, so the simulator/emulator loads the dev server from your Mac's LAN address (required for live reload when the host has multiple network interfaces).
 
 If you only need to push the latest web bundle into the native shells without live reload (e.g. before opening Xcode for a release build), use:
 
@@ -76,4 +87,6 @@ After each `cap:ios` / `cap:android` run, verify:
 | Xcode can't find `App.xcworkspace` | There isn't one. Open `frontend/ios/App/App.xcodeproj` instead. |
 | Android Gradle: `Unsupported class file major version XX` | Your `JAVA_HOME` points to JDK 22+. The repo pins JDK 21 via `org.gradle.java.home` in `frontend/android/gradle.properties` — if you deleted that line, restore it (`/usr/libexec/java_home -v 21` gives the path). Manual `./gradlew` invocations honor the pinned value automatically. |
 | Android emulator can't reach host | Confirm the emulator is using the standard AVD (not "Phone" image without bridge); `adb shell ping 10.0.2.2` should succeed |
+| `The --target option is required` | Ionic CLI cannot auto-pick a simulator. Run `npm run cap:ios:targets` (or `cap:android:targets`) and pass `-- --target=<uuid>` |
+| `Multiple network interfaces detected` | Your Mac has more than one active IPv4 interface (Wi-Fi + VPN/Ethernet). The npm script handles this by passing `--public-host=$(ipconfig getifaddr en0)`. If en0 isn't your active interface, override: `npm run cap:ios -- --target=<uuid> --public-host=<your-lan-ip>` |
 | Backend exits with `Connection refused` to `localhost:5432` | Postgres isn't running. Start it: `brew services start postgresql@16` (or run the project's Docker compose stack if you use one). The dev profile requires a live Postgres on `localhost:5432`. |

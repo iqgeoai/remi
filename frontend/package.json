@@ -10,8 +10,10 @@
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
     "lint": "ng lint",
-    "cap:ios": "ionic capacitor run ios --livereload --external",
-    "cap:android": "ionic capacitor run android --livereload --external",
+    "cap:ios": "ionic capacitor run ios --livereload --external --public-host=$(ipconfig getifaddr en0)",
+    "cap:android": "ionic capacitor run android --livereload --external --public-host=$(ipconfig getifaddr en0)",
+    "cap:ios:targets": "npx cap run ios --list",
+    "cap:android:targets": "npx cap run android --list",
     "cap:sync": "ng build && npx cap sync"
   },
   "private": true,
