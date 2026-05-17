@@ -1,13 +1,13 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { environment } from '../../../environments/environment';
+import { API_URL } from '../config/api-url.tokens';
 import { User, AuthTokens } from '../models';
 
 @Injectable({ providedIn: 'root' })
 export class AuthApi {
   private readonly http = inject(HttpClient);
-  private readonly base = environment.apiUrl;
+  private readonly base = inject(API_URL);
 
   register(req: { email: string; username: string; password: string }): Observable<User> {
     return this.http.post<User>(`${this.base}/auth/register`, req);

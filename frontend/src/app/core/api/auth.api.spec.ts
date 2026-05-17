@@ -2,16 +2,21 @@ import { TestBed } from '@angular/core/testing';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { AuthApi } from './auth.api';
-import { environment } from '../../../environments/environment';
+import { API_URL } from '../config/api-url.tokens';
 
 describe('AuthApi', () => {
   let api: AuthApi;
   let httpMock: HttpTestingController;
-  const base = environment.apiUrl;
+  const base = '/api';
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      providers: [provideHttpClient(), provideHttpClientTesting(), AuthApi],
+      providers: [
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        AuthApi,
+        { provide: API_URL, useValue: '/api' },
+      ],
     });
     api = TestBed.inject(AuthApi);
     httpMock = TestBed.inject(HttpTestingController);
