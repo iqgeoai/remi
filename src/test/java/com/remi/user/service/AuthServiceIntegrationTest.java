@@ -15,6 +15,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
+import java.time.Instant;
 import java.util.UUID;
 import static org.assertj.core.api.Assertions.*;
 
@@ -23,7 +24,7 @@ import static org.assertj.core.api.Assertions.*;
 @Testcontainers
 @ActiveProfiles("test")
 @Import(MockMailServiceTestConfig.class)
-class AuthServiceIT {
+class AuthServiceIntegrationTest {
   @Container @ServiceConnection
   static PostgreSQLContainer<?> pg = new PostgreSQLContainer<>("postgres:16-alpine");
 
@@ -109,5 +110,58 @@ class AuthServiceIT {
     authService.logout(UUID.fromString(t1.refreshToken()));
     assertThat(refreshRepo.findById(UUID.fromString(t1.refreshToken())).orElseThrow().getRevokedAt()).isNotNull();
     assertThat(refreshRepo.findById(UUID.fromString(t2.refreshToken())).orElseThrow().getRevokedAt()).isNull();
+  }
+
+  @Test
+  void logoutIsNoopForUnknownToken() {
+    assertThatNoException().isThrownBy(() -> authService.logout(UUID.randomUUID()));
+  }
+
+  @Test
+  void logoutIsNoopForAlreadyRevokedToken() {
+    registerAndVerify("a@b.com", "user1");
+    AuthTokens t1 = authService.login("a@b.com", "passwordxx");
+    UUID rt = UUID.fromString(t1.refreshToken());
+    authService.logout(rt);
+    Instant first = refreshRepo.findById(rt).orElseThrow().getRevokedAt();
+    authService.logout(rt);
+    Instant second = refreshRepo.findById(rt).orElseThrow().getRevokedAt();
+    assertThat(second).isEqualTo(first);
+  }
+
+  @Test
+  void refreshRejectsUnknownToken() {
+    assertThatThrownBy(() -> authService.refresh(UUID.randomUUID()))
+        .isInstanceOf(InvalidTokenException.class);
+  }
+
+  @Test
+  void refreshRejectsRevokedTokenWithoutReplacement() {
+    UUID userId = registerAndVerify("a@b.com", "user1");
+    UUID rtId = UUID.randomUUID();
+    RefreshTokenEntity rt = new RefreshTokenEntity(rtId, userId, Instant.now().plusSeconds(3600));
+    rt.revoke(Instant.now());
+    refreshRepo.save(rt);
+    assertThatThrownBy(() -> authService.refresh(rtId))
+        .isInstanceOf(InvalidTokenException.class);
+  }
+
+  @Test
+  void refreshRejectsExpiredToken() {
+    UUID userId = registerAndVerify("a@b.com", "user1");
+    UUID rtId = UUID.randomUUID();
+    refreshRepo.save(new RefreshTokenEntity(rtId, userId, Instant.now().minusSeconds(60)));
+    assertThatThrownBy(() -> authService.refresh(rtId))
+        .isInstanceOf(InvalidTokenException.class);
+  }
+
+  @Test
+  void logoutAllRevokesEveryActiveSession() {
+    UUID userId = registerAndVerify("a@b.com", "user1");
+    AuthTokens t1 = authService.login("a@b.com", "passwordxx");
+    AuthTokens t2 = authService.login("a@b.com", "passwordxx");
+    authService.logoutAll(userId);
+    assertThat(refreshRepo.findById(UUID.fromString(t1.refreshToken())).orElseThrow().getRevokedAt()).isNotNull();
+    assertThat(refreshRepo.findById(UUID.fromString(t2.refreshToken())).orElseThrow().getRevokedAt()).isNotNull();
   }
 }
