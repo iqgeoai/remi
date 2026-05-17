@@ -91,6 +91,47 @@ public class ApiExceptionHandler {
         .body(new ApiError("USERNAME_POLICY", e.getMessage()));
   }
 
+  @ExceptionHandler(com.remi.lobby.service.LobbyNotFoundException.class)
+  public ResponseEntity<ApiError> lobbyNotFound(com.remi.lobby.service.LobbyNotFoundException e) {
+    return ResponseEntity.status(org.springframework.http.HttpStatus.NOT_FOUND)
+        .body(new ApiError("LOBBY_NOT_FOUND", "Lobby inexistent."));
+  }
+  @ExceptionHandler(com.remi.lobby.service.LobbyFullException.class)
+  public ResponseEntity<ApiError> lobbyFull(com.remi.lobby.service.LobbyFullException e) {
+    return ResponseEntity.status(org.springframework.http.HttpStatus.CONFLICT)
+        .body(new ApiError("LOBBY_FULL", "Lobby plin."));
+  }
+  @ExceptionHandler(com.remi.lobby.service.AlreadySeatedException.class)
+  public ResponseEntity<ApiError> alreadySeated(com.remi.lobby.service.AlreadySeatedException e) {
+    return ResponseEntity.status(org.springframework.http.HttpStatus.CONFLICT)
+        .body(new ApiError("ALREADY_SEATED", "Ești deja la această masă."));
+  }
+  @ExceptionHandler(com.remi.lobby.service.NotSeatedException.class)
+  public ResponseEntity<ApiError> notSeated(com.remi.lobby.service.NotSeatedException e) {
+    return ResponseEntity.status(org.springframework.http.HttpStatus.FORBIDDEN)
+        .body(new ApiError("NOT_SEATED", "Nu ești la această masă."));
+  }
+  @ExceptionHandler(com.remi.lobby.service.NotYourSeatException.class)
+  public ResponseEntity<ApiError> notYourSeat(com.remi.lobby.service.NotYourSeatException e) {
+    return ResponseEntity.status(org.springframework.http.HttpStatus.FORBIDDEN)
+        .body(new ApiError("NOT_YOUR_SEAT", "Nu e locul tău."));
+  }
+  @ExceptionHandler(com.remi.lobby.service.GameAlreadyStartedException.class)
+  public ResponseEntity<ApiError> alreadyStarted(com.remi.lobby.service.GameAlreadyStartedException e) {
+    return ResponseEntity.status(org.springframework.http.HttpStatus.CONFLICT)
+        .body(new ApiError("GAME_ALREADY_STARTED", "Jocul a început deja."));
+  }
+  @ExceptionHandler(com.remi.lobby.service.JoinCodeNotFoundException.class)
+  public ResponseEntity<ApiError> codeNotFound(com.remi.lobby.service.JoinCodeNotFoundException e) {
+    return ResponseEntity.status(org.springframework.http.HttpStatus.NOT_FOUND)
+        .body(new ApiError("JOIN_CODE_NOT_FOUND", "Cod invalid."));
+  }
+  @ExceptionHandler(com.remi.lobby.service.MatchmakingAlreadyQueuedException.class)
+  public ResponseEntity<ApiError> alreadyQueued(com.remi.lobby.service.MatchmakingAlreadyQueuedException e) {
+    return ResponseEntity.status(org.springframework.http.HttpStatus.CONFLICT)
+        .body(new ApiError("ALREADY_QUEUED", "Ești deja în coada de matchmaking."));
+  }
+
   @ExceptionHandler(Exception.class)
   public ResponseEntity<ApiError> unexpected(Exception e) {
     log.error("Unexpected", e);
