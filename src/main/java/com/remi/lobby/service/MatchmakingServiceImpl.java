@@ -9,10 +9,15 @@ import java.util.concurrent.ConcurrentHashMap;
 @Service
 public class MatchmakingServiceImpl implements MatchmakingService {
   private final LobbyService lobby;
+  private final org.springframework.messaging.simp.SimpMessagingTemplate stomp;
   private final Map<MatchConfig, Deque<UUID>> queues = new ConcurrentHashMap<>();
   private final Set<UUID> queuedUsers = ConcurrentHashMap.newKeySet();
 
-  public MatchmakingServiceImpl(LobbyService lobby) { this.lobby = lobby; }
+  public MatchmakingServiceImpl(LobbyService lobby,
+                                 org.springframework.messaging.simp.SimpMessagingTemplate stomp) {
+    this.lobby = lobby;
+    this.stomp = stomp;
+  }
 
   @Override
   public Optional<LobbyGame> enqueue(UUID userId, MatchConfig config) {
@@ -25,6 +30,9 @@ public class MatchmakingServiceImpl implements MatchmakingService {
         for (int i = 0; i < config.numPlayers(); i++) picked.add(q.poll());
         picked.forEach(queuedUsers::remove);
         LobbyGame game = lobby.createPublicForUsers(picked, config.numPlayers(), config.mode(), config.difficulty());
+        for (java.util.UUID uid : picked) {
+          stomp.convertAndSendToUser(uid.toString(), "/queue/match", game);
+        }
         return Optional.of(game);
       }
       return Optional.empty();
@@ -47,7 +55,7 @@ public class MatchmakingServiceImpl implements MatchmakingService {
   }
 
   /** Test-only: clears all in-memory queue state. */
-  void clearAllForTest() {
+  public void clearAllForTest() {
     queues.clear();
     queuedUsers.clear();
   }
