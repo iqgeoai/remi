@@ -1,0 +1,5 @@
+<button class="stock" [class.can-draw]="canDraw()" [disabled]="!canDraw()" (click)="onClick()"
+        [attr.aria-label]="'Pachet (' + count() + ' rămase)'">
+  <span class="count">{{ count() }}</span>
+  <span class="label">pachet</span>
+</button>
