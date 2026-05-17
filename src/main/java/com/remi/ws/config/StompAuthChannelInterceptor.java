@@ -9,6 +9,7 @@ import org.springframework.messaging.MessagingException;
 import org.springframework.messaging.simp.stomp.StompCommand;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.messaging.support.ChannelInterceptor;
+import org.springframework.messaging.support.MessageHeaderAccessor;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -19,8 +20,9 @@ public class StompAuthChannelInterceptor implements ChannelInterceptor {
 
   @Override
   public Message<?> preSend(Message<?> message, MessageChannel channel) {
-    StompHeaderAccessor accessor = StompHeaderAccessor.wrap(message);
-    if (StompCommand.CONNECT.equals(accessor.getCommand())) {
+    StompHeaderAccessor accessor =
+        MessageHeaderAccessor.getAccessor(message, StompHeaderAccessor.class);
+    if (accessor != null && StompCommand.CONNECT.equals(accessor.getCommand())) {
       String authHeader = accessor.getFirstNativeHeader("Authorization");
       if (authHeader == null || !authHeader.startsWith("Bearer ")) {
         throw new MessagingException("Missing or malformed Authorization header");
@@ -29,6 +31,7 @@ public class StompAuthChannelInterceptor implements ChannelInterceptor {
       try {
         JwtClaims claims = jwt.parseAccessToken(token);
         accessor.setUser(new StompPrincipal(claims.userId()));
+        accessor.setLeaveMutable(true);
       } catch (JwtException e) {
         throw new MessagingException("Invalid JWT: " + e.getMessage());
       }
