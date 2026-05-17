@@ -131,8 +131,8 @@ Use ImageMagick (already on macOS via Homebrew; if absent, run `brew install ima
 ```bash
 cd /Users/georgesand/IdeaProjects/remi/frontend
 mkdir -p resources
-convert -size 1024x1024 xc:'#1a4a7e' -gravity center -pointsize 600 -fill white -font Helvetica-Bold -draw "text 0,0 'R'" resources/icon.png
-convert -size 2732x2732 xc:'#1a4a7e' -gravity center -pointsize 1200 -fill white -font Helvetica-Bold -draw "text 0,0 'R'" resources/splash.png
+magick -size 1024x1024 xc:'#1a4a7e' -gravity center -pointsize 600 -fill white -font Helvetica-Bold -draw "text 0,0 'R'" resources/icon.png
+magick -size 2732x2732 xc:'#1a4a7e' -gravity center -pointsize 1200 -fill white -font Helvetica-Bold -draw "text 0,0 'R'" resources/splash.png
 ```
 
 - [ ] **Step 2: Verify PNGs exist with correct dimensions**
