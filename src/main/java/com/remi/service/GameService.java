@@ -19,10 +19,17 @@ public class GameService {
 
   private final GameRepository repo;
   private final com.remi.lobby.persistence.GamePlayerRepository playerSeats;
+  private final com.remi.ws.broadcast.GameBroadcaster broadcaster;
+  private final com.remi.lobby.service.GameTimerService timer;
 
-  public GameService(GameRepository repo, com.remi.lobby.persistence.GamePlayerRepository playerSeats) {
+  public GameService(GameRepository repo,
+                     com.remi.lobby.persistence.GamePlayerRepository playerSeats,
+                     com.remi.ws.broadcast.GameBroadcaster broadcaster,
+                     com.remi.lobby.service.GameTimerService timer) {
     this.repo = repo;
     this.playerSeats = playerSeats;
+    this.broadcaster = broadcaster;
+    this.timer = timer;
   }
 
   @Transactional
@@ -52,7 +59,14 @@ public class GameService {
         entity.setState(a.newState());
         repo.save(entity);
         log.debug("Action {} accepted on game {}", action.getClass().getSimpleName(), gameId);
-        yield a.newState();
+        com.remi.engine.domain.GameState ns = a.newState();
+        timer.cancel(gameId);
+        if (!ns.closed() && !ns.players().get(ns.current()).isBot()) {
+          int currentIdx = ns.current();
+          timer.scheduleHardTimeout(gameId, currentIdx, () -> autoForceOnTimeout(gameId, currentIdx));
+        }
+        broadcaster.broadcastState(gameId, ns, a.events());
+        yield ns;
       }
     };
   }
@@ -85,5 +99,17 @@ public class GameService {
         .orElseThrow(com.remi.lobby.service.NotSeatedException::new);
     if (action.playerIdx() != seat) throw new com.remi.lobby.service.NotYourSeatException();
     return applyAction(gameId, action);
+  }
+
+  void autoForceOnTimeout(java.util.UUID gameId, int expectedPlayerIdx) {
+    try {
+      GameEntity entity = repo.findById(gameId).orElse(null);
+      if (entity == null) return;
+      com.remi.engine.domain.GameState s = entity.getState();
+      if (s.closed() || s.current() != expectedPlayerIdx) return;
+      applyAction(gameId, new com.remi.engine.domain.Action.ForceAutoAction(expectedPlayerIdx));
+    } catch (Exception e) {
+      log.error("autoForceOnTimeout error for game {}", gameId, e);
+    }
   }
 }
