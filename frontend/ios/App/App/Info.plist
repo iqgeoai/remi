@@ -60,5 +60,16 @@
 			</dict>
 		</dict>
 	</dict>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>ro.remi.app</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>remi</string>
+			</array>
+		</dict>
+	</array>
 </dict>
 </plist>
