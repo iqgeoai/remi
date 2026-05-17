@@ -1,0 +1,15 @@
+<ion-content class="ion-padding">
+  <h1>Intră cu cod</h1>
+  <app-error-banner [error]="error$ | async"></app-error-banner>
+  <form [formGroup]="form" (ngSubmit)="submit()">
+    <ion-list>
+      <ion-item>
+        <ion-label position="stacked">Cod (8 caractere)</ion-label>
+        <ion-input formControlName="joinCode" autocapitalize="characters" maxlength="8" required></ion-input>
+      </ion-item>
+    </ion-list>
+    <ion-button type="submit" expand="block" [disabled]="form.invalid || (loading$ | async)">
+      Intră
+    </ion-button>
+  </form>
+</ion-content>
