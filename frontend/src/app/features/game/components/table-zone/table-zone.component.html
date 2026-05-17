@@ -1,0 +1,10 @@
+<div class="table">
+  <div class="top-row">
+    <app-atu-display [atu]="atu()"></app-atu-display>
+    <app-stock-pile [count]="stockCount()" [canDraw]="canDraw()" (clicked)="drawClicked.emit()"></app-stock-pile>
+    <app-discard-pile [discard]="discard()" [canTake]="canTake()"
+                      (takeRequested)="takeRequested.emit($event)"
+                      (pieceDroppedHere)="pieceDroppedToDiscard.emit($event)"></app-discard-pile>
+  </div>
+  <app-melds-area [melds]="melds()" (layoffDropped)="layoffDropped.emit($event)"></app-melds-area>
+</div>
