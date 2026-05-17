@@ -37,3 +37,49 @@ Prerequisites:
 - Alice goes to /lobby/quick → form (2, ETALAT, MED) → "Caută meci" → "În așteptare..." spinner.
 - Bob (different tab) goes to /lobby/quick → same form → "Caută meci".
 - Both auto-navigate to the same /game/&lt;id&gt; with their seats assigned.
+
+## Stage 4b — Game UI scenarios
+
+### Tap-to-select etalat
+
+1. As Alice, after Bob joins and game starts, locate 3 consecutive RED pieces in your hand (e.g. 5/6/7).
+2. Tap each — they lift up with a yellow glow.
+3. Action bar shows "+ Adaugă meld" (green) — tap it.
+4. Selection clears; "Etalează (1)" button (warning color) appears.
+5. Repeat to add another meld if you have 45+ points worth. Otherwise tap "Etalează (1)".
+6. Backend may reject if total <45p (first meld) → toast "Prima etalare are X<45p" + proposed meld restored. Adjust and retry.
+7. On success: meld appears in table area; hand shrinks; current advances to next player.
+
+### Etalat invalid
+
+1. Tap 2 RED pieces that are NOT consecutive (e.g. 5 and 8).
+2. "+ Adaugă meld" button does NOT appear (detectMeld returns null client-side).
+3. No backend roundtrip needed.
+
+### Layoff drag&drop
+
+1. As Bob with hasEtalat=true, drag a piece from your hand onto an existing meld card (e.g. Alice's group of 7s).
+2. Drop target turns green during drag (cdkDropList highlight).
+3. Drop: backend processes; piece appears in meld; hand reduces.
+4. If invalid (e.g. piece doesn't fit): toast "Piesa nu se potrivește."
+
+### Take discard with break-line
+
+1. As Alice with hasEtalat=true and hand≥4, the discard pile shows count + top piece.
+2. Tap top piece (canTake=true → click handler fires).
+3. Backend returns multiple pieces (the broken row): top + everything above the chosen index.
+4. Hand grows; chosen piece has red border (mustUsePieceId).
+5. You must use that piece in a meld/layoff before discarding else server rejects with MUST_USE_TAKEN_PIECE.
+
+### Round-end modal
+
+1. Play until you close the round (etalat your second-to-last piece + discard the last, or play your last via etalat that empties the hand).
+2. View updates with `closed: true`.
+3. Modal pops up with results table (each player + round score + total) + winner highlighted.
+4. Tap "Înapoi la lobby" → /lobby.
+
+### Hybrid timer
+
+1. Start your turn, don't act for 120 seconds. Timer in header counts down.
+2. At 0, client auto-dispatches FORCE_AUTO. Server processes (auto-draw or auto-discard depending on phase).
+3. If client stalls (e.g. tab backgrounded), server fallback fires at 180s.

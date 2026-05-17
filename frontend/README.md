@@ -38,9 +38,16 @@ See `SMOKE_TEST.md`.
 src/app/
   core/        api/, ws/, auth/, models/, i18n/
   store/       NgRx (auth, lobby, match, game)
-  features/    Page components by feature
+  features/
+    auth/      Login, Register, VerifyEmail, RequestReset, ResetPassword
+    lobby/     LobbyHome, CreateGame, JoinByCode, PublicList, QuickMatch
+    game/      GamePage + 12 sub-components (Stage 4b real game UI)
   shared/      ErrorBanner, WsIndicator, GlobalErrorHandler
 ```
+
+Stage 4b replaces the previous GameDebugPage placeholder. Game state is consumed
+from the existing NgRx Game store; UI state (selected pieces, proposed melds,
+seconds left) is local to the GamePage component via signals.
 
 JWT stored in `localStorage` (Stage 4a); switches to Capacitor Preferences in Stage 5.
 WebSocket via STOMP+SockJS at `/ws` with `Authorization: Bearer <accessToken>` on CONNECT.
