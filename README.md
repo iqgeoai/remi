@@ -137,6 +137,50 @@ curl -X POST http://localhost:8080/api/auth/logout \
 
 The Stage 1 `/api/dev/games/*` endpoints remain accessible without auth (whitelist in `SecurityConfig`). They will be replaced by authenticated `/api/games/*` in Stage 3.
 
+## Multiplayer (Stage 3)
+
+Stage 3 adds online play with WebSocket broadcasts.
+
+### Quick demo
+
+```bash
+# Two terminals; each represents one user.
+# After register/verify/login in each (see Stage 2 quickstart), grab access tokens.
+
+# Terminal 1 (Alice — owner):
+curl -X POST http://localhost:8080/api/games -H "Authorization: Bearer $A_TOKEN" \
+  -H 'Content-Type: application/json' \
+  -d '{"visibility":"PRIVATE","numPlayers":2,"mode":"ETALAT","difficulty":"MED"}'
+# → {"id":"...","joinCode":"ABC12345",...}
+
+# Terminal 2 (Bob — guest):
+curl -X POST http://localhost:8080/api/games/join-by-code -H "Authorization: Bearer $B_TOKEN" \
+  -H 'Content-Type: application/json' -d '{"joinCode":"ABC12345"}'
+# → {... "started": true ...}
+
+# Both connect WebSocket (STOMP + SockJS) at ws://localhost:8080/ws
+# with CONNECT header: Authorization: Bearer <access-token>
+# Subscribe to:  /user/queue/games/<game-id>  (per-user game state)
+#                /user/queue/errors           (per-user error feedback)
+# Send actions to: /app/games/<game-id>/actions  with JSON body  {"type":"DISCARD","playerIdx":0,"pieceId":42}
+```
+
+### Matchmaking (public quick-match)
+
+```bash
+curl -X POST http://localhost:8080/api/matchmaking/quick \
+  -H "Authorization: Bearer $A_TOKEN" -H 'Content-Type: application/json' \
+  -d '{"numPlayers":2,"mode":"ETALAT","difficulty":"MED"}'
+# → {"matched":false}  (queued)  OR  {"matched":true,"game":{...}}
+```
+
+When a matching user joins the queue, both are notified via WebSocket on `/user/queue/match`.
+
+### Turn timer
+
+- Client should send `ForceAuto` 120s after their own turn starts (UX).
+- Server enforces a hard 180s fallback (config `game-timer.hard-timeout`).
+
 ## Source of truth for game rules
 
 `assets/remi.html` — the original single-player HTML implementation. When in doubt, the JS implementation wins. The Java port is faithful (modulo two bug fixes caught by jqwik properties: `findLayoffs` capacity tracking, and `closeRound` when etalat/layoff empties the hand).
