@@ -20,6 +20,7 @@ import { LobbyEffects } from './store/lobby/lobby.effects';
 import { MatchEffects } from './store/match/match.effects';
 import { GameEffects } from './store/game/game.effects';
 import { GlobalErrorHandler } from './shared/global-error-handler';
+import { provideApiUrls } from './core/config/api-url.provider';
 import { environment } from '../environments/environment';
 
 export const appConfig: ApplicationConfig = {
@@ -39,5 +40,6 @@ export const appConfig: ApplicationConfig = {
     provideEffects(AuthEffects, AuthWsEffects, LobbyEffects, MatchEffects, GameEffects),
     provideStoreDevtools({ maxAge: 25, logOnly: environment.production }),
     { provide: ErrorHandler, useClass: GlobalErrorHandler },
+    provideApiUrls(),
   ],
 };
