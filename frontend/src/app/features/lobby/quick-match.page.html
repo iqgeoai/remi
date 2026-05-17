@@ -1,0 +1,34 @@
+<ion-content class="ion-padding">
+  <h1>Match rapid</h1>
+  <app-error-banner [error]="error$ | async"></app-error-banner>
+
+  <form [formGroup]="form" (ngSubmit)="find()" *ngIf="(status$ | async) === 'idle' || (status$ | async) === 'error'">
+    <ion-list>
+      <ion-item>
+        <ion-label position="stacked">Număr jucători: {{ form.value.numPlayers }}</ion-label>
+        <ion-range formControlName="numPlayers" min="2" max="6" step="1" snaps="true" pin="true"></ion-range>
+      </ion-item>
+      <ion-item>
+        <ion-label>Mod</ion-label>
+        <ion-select formControlName="mode" interface="popover">
+          <ion-select-option value="ETALAT">Etalat</ion-select-option>
+          <ion-select-option value="TABLA">Tabla</ion-select-option>
+        </ion-select>
+      </ion-item>
+      <ion-item>
+        <ion-label>Dificultate</ion-label>
+        <ion-select formControlName="difficulty" interface="popover">
+          <ion-select-option value="EASY">Ușor</ion-select-option>
+          <ion-select-option value="MED">Mediu</ion-select-option>
+          <ion-select-option value="HARD">Greu</ion-select-option>
+        </ion-select>
+      </ion-item>
+    </ion-list>
+    <ion-button type="submit" expand="block" [disabled]="form.invalid">Caută meci</ion-button>
+  </form>
+
+  <div *ngIf="(status$ | async) === 'queued'" class="queued-banner">
+    <p>În așteptare...</p>
+    <ion-button color="warning" expand="block" (click)="cancel()">Anulează</ion-button>
+  </div>
+</ion-content>
