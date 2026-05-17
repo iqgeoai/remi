@@ -1,0 +1,8 @@
+# Frontend
+frontend/node_modules/
+frontend/www/
+frontend/.angular/
+frontend/dist/
+frontend/coverage/
+frontend/ios/
+frontend/android/
