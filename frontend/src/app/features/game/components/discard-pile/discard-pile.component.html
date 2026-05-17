@@ -1,0 +1,13 @@
+<div class="discard"
+     cdkDropList
+     [id]="listId"
+     (cdkDropListDropped)="onDrop($event)">
+  <ng-container *ngIf="topPiece() as top; else empty">
+    <button class="top-clickable" [class.can-take]="canTake()" [disabled]="!canTake()" (click)="onTopClick()"
+            aria-label="Ia piesa de sus din aruncate">
+      <app-piece [piece]="top"></app-piece>
+    </button>
+    <span class="count" *ngIf="discard().length > 1">+{{ discard().length - 1 }}</span>
+  </ng-container>
+  <ng-template #empty><div class="empty">aruncate</div></ng-template>
+</div>

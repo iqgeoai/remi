@@ -1,0 +1,35 @@
+.discard {
+  width: 60px;
+  min-height: 80px;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 4px;
+  border-radius: 8px;
+  background: rgba(0,0,0,0.2);
+  border: 2px dashed rgba(255,255,255,0.15);
+
+  .top-clickable {
+    background: none; border: none; padding: 0; cursor: not-allowed;
+    &.can-take { cursor: pointer; }
+  }
+
+  .count {
+    font-size: 10px;
+    color: rgba(255,255,255,0.6);
+    margin-top: 2px;
+  }
+
+  .empty {
+    color: rgba(255,255,255,0.4);
+    font-size: 11px;
+    text-transform: uppercase;
+    padding: 16px 4px;
+    text-align: center;
+  }
+}
+
+:host-context(.cdk-drop-list-receiving) .discard {
+  border-color: #ffc409;
+  background: rgba(255, 196, 9, 0.1);
+}
