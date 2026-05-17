@@ -1,0 +1,12 @@
+.action-bar {
+  padding: 8px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  .hint {
+    text-align: center;
+    font-size: 12px;
+    opacity: 0.6;
+    margin: 4px 0;
+  }
+}

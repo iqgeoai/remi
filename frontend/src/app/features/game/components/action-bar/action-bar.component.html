@@ -1,0 +1,24 @@
+<div class="action-bar">
+  <ion-button *ngIf="canDraw()" expand="block" color="primary" (click)="drawClicked.emit()">
+    Trage de la pachet
+  </ion-button>
+
+  <ion-button *ngIf="hasSelection() && canEtalat()" expand="block" color="success" (click)="addMeldClicked.emit()">
+    + Adaugă meld
+  </ion-button>
+
+  <ion-button *ngIf="hasProposed()" expand="block" color="warning" (click)="etalatClicked.emit()">
+    {{ proposedLabel() }}
+  </ion-button>
+
+  <ion-button *ngIf="hasSelection() || hasProposed()" expand="block" fill="clear" color="medium" (click)="cancelClicked.emit()">
+    Anulează
+  </ion-button>
+
+  <p *ngIf="!canDraw() && !hasSelection() && !hasProposed() && mustUseHint()" class="hint">
+    Trebuie să folosești piesa luată din șir.
+  </p>
+  <p *ngIf="!canDraw() && !hasSelection() && !hasProposed() && !mustUseHint()" class="hint">
+    Trage o piesă pe pachetul de aruncare sau selectează pentru etalat.
+  </p>
+</div>
