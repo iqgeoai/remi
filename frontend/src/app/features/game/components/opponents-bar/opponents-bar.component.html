@@ -1,0 +1,7 @@
+<div class="opponents">
+  <app-opponent-summary *ngFor="let row of opponents()"
+                       [player]="row.player"
+                       [score]="row.score"
+                       [active]="row.globalIdx === currentIdx()">
+  </app-opponent-summary>
+</div>
