@@ -34,3 +34,6 @@ mail:
   from: ${MAIL_FROM:noreply@remi.local}
   verification-link-base: ${MAIL_VERIFICATION_LINK_BASE:http://localhost:8080/verify}
   reset-link-base: ${MAIL_RESET_LINK_BASE:http://localhost:8080/reset}
+
+game-timer:
+  hard-timeout: PT3M
