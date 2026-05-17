@@ -1,0 +1,8 @@
+<span class="ws-indicator" [attr.data-state]="state" [title]="state">
+  <ng-container [ngSwitch]="state">
+    <span *ngSwitchCase="'CONNECTED'" class="dot connected"></span>
+    <span *ngSwitchCase="'CONNECTING'" class="dot spinning">⟳</span>
+    <span *ngSwitchCase="'RECONNECTING'" class="dot spinning warn">⟳</span>
+    <span *ngSwitchCase="'DISCONNECTED'" class="dot disconnected"></span>
+  </ng-container>
+</span>

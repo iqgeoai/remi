@@ -1,0 +1,12 @@
+.ws-indicator {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 8px;
+  .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+  .dot.connected { background: #2dd36f; }
+  .dot.disconnected { background: #eb445a; }
+  .dot.spinning { background: transparent; color: #ffc409; animation: spin 1s linear infinite;
+                  font-size: 12px; line-height: 1; }
+  .dot.spinning.warn { color: #ffc409; }
+}
+@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
