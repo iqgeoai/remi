@@ -18,7 +18,12 @@ public class GameService {
   private static final int MAX_BOT_STEPS = 100;
 
   private final GameRepository repo;
-  public GameService(GameRepository repo) { this.repo = repo; }
+  private final com.remi.lobby.persistence.GamePlayerRepository playerSeats;
+
+  public GameService(GameRepository repo, com.remi.lobby.persistence.GamePlayerRepository playerSeats) {
+    this.repo = repo;
+    this.playerSeats = playerSeats;
+  }
 
   @Transactional
   public GameState create(int numPlayers, Mode mode, Difficulty difficulty, Long seed) {
@@ -71,5 +76,14 @@ public class GameService {
     entity.setState(state);
     repo.save(entity);
     return state;
+  }
+
+  @Transactional
+  public com.remi.engine.domain.GameState applyActionAsUser(
+      java.util.UUID gameId, java.util.UUID userId, com.remi.engine.domain.Action action) {
+    int seat = playerSeats.findSeat(gameId, userId)
+        .orElseThrow(com.remi.lobby.service.NotSeatedException::new);
+    if (action.playerIdx() != seat) throw new com.remi.lobby.service.NotYourSeatException();
+    return applyAction(gameId, action);
   }
 }
