@@ -1,0 +1,43 @@
+<ion-content class="ion-padding">
+  <h1>Creează masă</h1>
+  <app-error-banner [error]="error$ | async"></app-error-banner>
+
+  <form [formGroup]="form" (ngSubmit)="submit()">
+    <ion-list>
+      <ion-radio-group formControlName="visibility">
+        <ion-item>
+          <ion-radio value="PRIVATE">Privată (cu cod)</ion-radio>
+        </ion-item>
+        <ion-item>
+          <ion-radio value="PUBLIC">Publică (vizibilă în lista de mese)</ion-radio>
+        </ion-item>
+      </ion-radio-group>
+
+      <ion-item>
+        <ion-label position="stacked">Număr jucători: {{ form.value.numPlayers }}</ion-label>
+        <ion-range formControlName="numPlayers" min="2" max="6" step="1" snaps="true" pin="true"></ion-range>
+      </ion-item>
+
+      <ion-item>
+        <ion-label>Mod</ion-label>
+        <ion-select formControlName="mode" interface="popover">
+          <ion-select-option value="ETALAT">Etalat (clasic)</ion-select-option>
+          <ion-select-option value="TABLA">Tabla (închidere rapidă)</ion-select-option>
+        </ion-select>
+      </ion-item>
+
+      <ion-item>
+        <ion-label>Dificultate (pentru boți)</ion-label>
+        <ion-select formControlName="difficulty" interface="popover">
+          <ion-select-option value="EASY">Ușor</ion-select-option>
+          <ion-select-option value="MED">Mediu</ion-select-option>
+          <ion-select-option value="HARD">Greu</ion-select-option>
+        </ion-select>
+      </ion-item>
+    </ion-list>
+
+    <ion-button type="submit" expand="block" [disabled]="form.invalid || (loading$ | async)">
+      {{ (loading$ | async) ? 'Se creează...' : 'Creează' }}
+    </ion-button>
+  </form>
+</ion-content>
