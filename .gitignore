@@ -4,5 +4,3 @@ frontend/www/
 frontend/.angular/
 frontend/dist/
 frontend/coverage/
-frontend/ios/
-frontend/android/
