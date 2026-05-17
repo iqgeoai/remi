@@ -1,0 +1,9 @@
+<div class="meld" [attr.data-type]="meld().type"
+     cdkDropList
+     [id]="listId"
+     (cdkDropListDropped)="onDrop($event)">
+  <span class="type-label">{{ meld().type === 'GROUP' ? 'Grup' : 'Suită' }}</span>
+  <div class="pieces">
+    <app-piece *ngFor="let piece of meld().pieces" [piece]="piece"></app-piece>
+  </div>
+</div>

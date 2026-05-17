@@ -1,0 +1,22 @@
+.meld {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 6px 8px;
+  border-radius: 8px;
+  background: rgba(255,255,255,0.05);
+  border: 2px solid transparent;
+
+  .type-label {
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    opacity: 0.65;
+  }
+  .pieces { display: flex; gap: 4px; }
+}
+
+:host-context(.cdk-drop-list-receiving) .meld {
+  border-color: #2dd36f;
+  background: rgba(45, 211, 111, 0.1);
+}
