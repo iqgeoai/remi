@@ -1,0 +1,5 @@
+<div class="atu" [class.double-game]="doubleGame()">
+  <span class="label">Atu</span>
+  <app-piece [piece]="atu()"></app-piece>
+  <span *ngIf="doubleGame()" class="double-badge">JOC DUBLU</span>
+</div>
