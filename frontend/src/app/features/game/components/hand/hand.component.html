@@ -1,0 +1,14 @@
+<div class="hand"
+     cdkDropList
+     [cdkDropListOrientation]="'horizontal'"
+     [id]="listId"
+     [cdkDropListConnectedTo]="connectedTo()"
+     (cdkDropListDropped)="onDrop($event)">
+  <div class="piece-wrap" *ngFor="let piece of pieces(); trackBy: trackById" cdkDrag>
+    <app-piece [piece]="piece"
+               [selected]="isSelected(piece)"
+               [mustUse]="isMustUse(piece)"
+               (select)="pieceClicked.emit($event)">
+    </app-piece>
+  </div>
+</div>

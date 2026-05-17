@@ -1,0 +1,16 @@
+.hand {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 8px;
+  min-height: 80px;
+  background: rgba(255,255,255,0.04);
+  border-radius: 12px;
+}
+.piece-wrap { display: inline-block; }
+.cdk-drag-preview { opacity: 0.9; }
+.cdk-drag-placeholder { opacity: 0.3; }
+.cdk-drop-list-dragging .piece-wrap:not(.cdk-drag-placeholder) {
+  transition: transform 150ms;
+}
