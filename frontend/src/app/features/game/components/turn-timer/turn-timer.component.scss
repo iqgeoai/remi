@@ -1,0 +1,14 @@
+.timer {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #6cbf6c;
+  font-family: 'Inter', sans-serif;
+
+  &.warn { color: #ffc409; }
+  &.critical { color: #eb445a; animation: pulse 0.6s ease-in-out infinite; }
+
+  .num { font-size: 14px; font-weight: 600; min-width: 36px; text-align: right; }
+}
+
+@keyframes pulse { 50% { opacity: 0.5; } }
