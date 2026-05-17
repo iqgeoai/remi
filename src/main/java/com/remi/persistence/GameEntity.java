@@ -23,6 +23,16 @@ public class GameEntity {
   @Column(nullable = false)
   private Long version;
 
+  @Column(name = "owner_id")
+  private java.util.UUID ownerId;
+
+  @jakarta.persistence.Enumerated(jakarta.persistence.EnumType.STRING)
+  @Column(name = "visibility", nullable = false, length = 10)
+  private com.remi.lobby.domain.GameVisibility visibility = com.remi.lobby.domain.GameVisibility.PRIVATE;
+
+  @Column(name = "join_code", unique = true, length = 8)
+  private String joinCode;
+
   @CreationTimestamp
   @Column(name = "created_at", nullable = false, updatable = false)
   private Instant createdAt;
@@ -40,4 +50,10 @@ public class GameEntity {
   public Long getVersion() { return version; }
   public Instant getCreatedAt() { return createdAt; }
   public Instant getUpdatedAt() { return updatedAt; }
+  public java.util.UUID getOwnerId() { return ownerId; }
+  public void setOwnerId(java.util.UUID ownerId) { this.ownerId = ownerId; }
+  public com.remi.lobby.domain.GameVisibility getVisibility() { return visibility; }
+  public void setVisibility(com.remi.lobby.domain.GameVisibility visibility) { this.visibility = visibility; }
+  public String getJoinCode() { return joinCode; }
+  public void setJoinCode(String joinCode) { this.joinCode = joinCode; }
 }
