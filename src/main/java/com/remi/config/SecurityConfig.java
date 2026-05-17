@@ -4,6 +4,7 @@ import com.remi.auth.jwt.JsonAuthenticationEntryPoint;
 import com.remi.auth.jwt.JwtAuthFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -26,6 +27,7 @@ public class SecurityConfig {
                                                   JwtAuthFilter jwtAuthFilter,
                                                   JsonAuthenticationEntryPoint entryPoint) throws Exception {
     return http
+        .cors(Customizer.withDefaults())
         .csrf(c -> c.disable())
         .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
         .authorizeHttpRequests(a -> a
