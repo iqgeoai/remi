@@ -9,7 +9,10 @@
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
-    "lint": "ng lint"
+    "lint": "ng lint",
+    "cap:ios": "ionic capacitor run ios --livereload --external",
+    "cap:android": "ionic capacitor run android --livereload --external",
+    "cap:sync": "ng build && npx cap sync"
   },
   "private": true,
   "dependencies": {
