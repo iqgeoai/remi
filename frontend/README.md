@@ -51,3 +51,7 @@ seconds left) is local to the GamePage component via signals.
 
 JWT stored in `localStorage` (Stage 4a); switches to Capacitor Preferences in Stage 5.
 WebSocket via STOMP+SockJS at `/ws` with `Authorization: Bearer <accessToken>` on CONNECT.
+
+## Running on mobile
+
+See [`docs/MOBILE_DEV.md`](../docs/MOBILE_DEV.md) for prereqs, first-time setup, daily workflow, and troubleshooting for iOS Simulator + Android Emulator targets.
