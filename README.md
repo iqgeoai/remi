@@ -181,6 +181,12 @@ When a matching user joins the queue, both are notified via WebSocket on `/user/
 - Client should send `ForceAuto` 120s after their own turn starts (UX).
 - Server enforces a hard 180s fallback (config `game-timer.hard-timeout`).
 
+## Frontend (Stage 4a)
+
+Ionic 8 + Angular 19 + NgRx 18 client lives under `frontend/`. See `frontend/README.md` for setup and `frontend/SMOKE_TEST.md` for manual E2E flow.
+
+Stage 4a is a usable shell: register/verify/login, lobby create/join, quick-match, WebSocket-driven game state with a JSON-debug action form. Real game UI ships in Stage 4b.
+
 ## Source of truth for game rules
 
 `assets/remi.html` — the original single-player HTML implementation. When in doubt, the JS implementation wins. The Java port is faithful (modulo two bug fixes caught by jqwik properties: `findLayoffs` capacity tracking, and `closeRound` when etalat/layoff empties the hand).
