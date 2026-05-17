@@ -1,0 +1,32 @@
+<ion-content class="ion-padding">
+  <h1>Autentificare</h1>
+
+  <div *ngIf="invalidationReason$ | async as reason" class="invalidation-notice" role="alert">
+    Sesiunea anterioară a fost încheiată ({{ reason }}). Te rugăm să te reloghezi.
+  </div>
+
+  <app-error-banner [error]="error$ | async"></app-error-banner>
+
+  <form [formGroup]="form" (ngSubmit)="submit()">
+    <ion-list>
+      <ion-item>
+        <ion-label position="stacked">Email sau username</ion-label>
+        <ion-input formControlName="emailOrUsername" autocomplete="username" required></ion-input>
+      </ion-item>
+      <ion-item>
+        <ion-label position="stacked">Parolă</ion-label>
+        <ion-input type="password" formControlName="password" autocomplete="current-password" required></ion-input>
+      </ion-item>
+    </ion-list>
+
+    <ion-button type="submit" expand="block" [disabled]="form.invalid || (status$ | async) === 'loading'">
+      {{ (status$ | async) === 'loading' ? 'Se autentifică...' : 'Login' }}
+    </ion-button>
+  </form>
+
+  <p class="links">
+    <a routerLink="/register">Cont nou</a>
+    ·
+    <a routerLink="/reset/request">Am uitat parola</a>
+  </p>
+</ion-content>
