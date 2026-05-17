@@ -1,0 +1,7 @@
+<div class="piece" [class.selected]="selected()" [class.must-use]="mustUse()"
+     [class]="colorClass()" (click)="onTap()"
+     [attr.data-piece-id]="piece().id"
+     [attr.aria-label]="piece().isJoker ? 'Joker' : (piece().color + ' ' + piece().num)">
+  <span *ngIf="!piece().isJoker" class="num">{{ piece().num }}</span>
+  <span *ngIf="piece().isJoker" class="joker-star">★</span>
+</div>
