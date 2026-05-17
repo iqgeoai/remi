@@ -42,6 +42,55 @@ public class ApiExceptionHandler {
     return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ApiError("ENGINE_ERROR", "Eroare internă engine."));
   }
 
+  @ExceptionHandler(com.remi.user.service.EmailAlreadyTakenException.class)
+  public ResponseEntity<ApiError> emailTaken(com.remi.user.service.EmailAlreadyTakenException e) {
+    return ResponseEntity.status(org.springframework.http.HttpStatus.CONFLICT)
+        .body(new ApiError("EMAIL_TAKEN", "Acest email este deja folosit."));
+  }
+
+  @ExceptionHandler(com.remi.user.service.UsernameAlreadyTakenException.class)
+  public ResponseEntity<ApiError> usernameTaken(com.remi.user.service.UsernameAlreadyTakenException e) {
+    return ResponseEntity.status(org.springframework.http.HttpStatus.CONFLICT)
+        .body(new ApiError("USERNAME_TAKEN", "Acest username este deja folosit."));
+  }
+
+  @ExceptionHandler(com.remi.user.service.InvalidCredentialsException.class)
+  public ResponseEntity<ApiError> invalidCreds(com.remi.user.service.InvalidCredentialsException e) {
+    return ResponseEntity.status(org.springframework.http.HttpStatus.BAD_REQUEST)
+        .body(new ApiError("INVALID_CREDENTIALS", "Credențiale invalide sau email neverificat."));
+  }
+
+  @ExceptionHandler(com.remi.user.service.InvalidTokenException.class)
+  public ResponseEntity<ApiError> invalidToken(com.remi.user.service.InvalidTokenException e) {
+    return ResponseEntity.status(org.springframework.http.HttpStatus.BAD_REQUEST)
+        .body(new ApiError("INVALID_TOKEN", "Token invalid sau expirat."));
+  }
+
+  @ExceptionHandler(com.remi.user.service.TokenReusedException.class)
+  public ResponseEntity<ApiError> tokenReused(com.remi.user.service.TokenReusedException e) {
+    log.warn("Refresh token reuse detected — all user sessions revoked");
+    return ResponseEntity.status(org.springframework.http.HttpStatus.UNAUTHORIZED)
+        .body(new ApiError("TOKEN_REUSED", "Sesiunea a fost compromisă, re-autentificare necesară."));
+  }
+
+  @ExceptionHandler(com.remi.user.service.UserNotFoundException.class)
+  public ResponseEntity<ApiError> userNotFound(com.remi.user.service.UserNotFoundException e) {
+    return ResponseEntity.status(org.springframework.http.HttpStatus.NOT_FOUND)
+        .body(new ApiError("USER_NOT_FOUND", "Utilizator inexistent."));
+  }
+
+  @ExceptionHandler(com.remi.user.service.PasswordPolicyViolationException.class)
+  public ResponseEntity<ApiError> passwordPolicy(com.remi.user.service.PasswordPolicyViolationException e) {
+    return ResponseEntity.status(org.springframework.http.HttpStatus.BAD_REQUEST)
+        .body(new ApiError("PASSWORD_POLICY", e.getMessage()));
+  }
+
+  @ExceptionHandler(com.remi.user.service.UsernamePolicyViolationException.class)
+  public ResponseEntity<ApiError> usernamePolicy(com.remi.user.service.UsernamePolicyViolationException e) {
+    return ResponseEntity.status(org.springframework.http.HttpStatus.BAD_REQUEST)
+        .body(new ApiError("USERNAME_POLICY", e.getMessage()));
+  }
+
   @ExceptionHandler(Exception.class)
   public ResponseEntity<ApiError> unexpected(Exception e) {
     log.error("Unexpected", e);
