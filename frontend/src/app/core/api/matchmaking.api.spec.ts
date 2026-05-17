@@ -2,16 +2,21 @@ import { TestBed } from '@angular/core/testing';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { MatchmakingApi } from './matchmaking.api';
-import { environment } from '../../../environments/environment';
+import { API_URL } from '../config/api-url.tokens';
 
 describe('MatchmakingApi', () => {
   let api: MatchmakingApi;
   let httpMock: HttpTestingController;
-  const base = environment.apiUrl;
+  const base = '/api';
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      providers: [provideHttpClient(), provideHttpClientTesting(), MatchmakingApi],
+      providers: [
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        MatchmakingApi,
+        { provide: API_URL, useValue: '/api' },
+      ],
     });
     api = TestBed.inject(MatchmakingApi);
     httpMock = TestBed.inject(HttpTestingController);
