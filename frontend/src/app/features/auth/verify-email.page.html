@@ -1,0 +1,20 @@
+<ion-content class="ion-padding">
+  <h1>Verifică emailul</h1>
+  <app-error-banner [error]="error$ | async"></app-error-banner>
+
+  <div *ngIf="verified" class="success-banner" role="status">
+    Email verificat. <a routerLink="/login">Login</a>
+  </div>
+
+  <form [formGroup]="form" (ngSubmit)="submit()" *ngIf="!verified">
+    <ion-list>
+      <ion-item>
+        <ion-label position="stacked">Token din email</ion-label>
+        <ion-input formControlName="token" required></ion-input>
+      </ion-item>
+    </ion-list>
+    <ion-button type="submit" expand="block" [disabled]="form.invalid || (status$ | async) === 'loading'">
+      Verifică
+    </ion-button>
+  </form>
+</ion-content>
