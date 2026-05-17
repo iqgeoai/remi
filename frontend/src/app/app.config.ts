@@ -14,6 +14,7 @@ import { lobbyFeature } from './store/lobby/lobby.reducer';
 import { matchFeature } from './store/match/match.reducer';
 import { gameFeature } from './store/game/game.reducer';
 import { AuthEffects } from './store/auth/auth.effects';
+import { AuthWsEffects } from './store/auth/auth-ws.effects';
 import { LobbyEffects } from './store/lobby/lobby.effects';
 import { MatchEffects } from './store/match/match.effects';
 import { GameEffects } from './store/game/game.effects';
@@ -33,7 +34,7 @@ export const appConfig: ApplicationConfig = {
       [matchFeature.name]: matchFeature.reducer,
       [gameFeature.name]: gameFeature.reducer,
     }),
-    provideEffects(AuthEffects, LobbyEffects, MatchEffects, GameEffects),
+    provideEffects(AuthEffects, AuthWsEffects, LobbyEffects, MatchEffects, GameEffects),
     provideStoreDevtools({ maxAge: 25, logOnly: environment.production }),
     { provide: ErrorHandler, useClass: GlobalErrorHandler },
   ],
