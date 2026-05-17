@@ -251,6 +251,62 @@ git commit -m "chore(branding): generate native icons + splash from placeholder 
 
 ---
 
+### Task A7: Pin Android Gradle to JDK 21
+
+**Context:** The dev's default `java` may be JDK 22+ (e.g., system default is Corretto 25). Gradle 8.14.3 bundled with the Capacitor Android scaffold rejects class file major version 69 (Java 25). Pin Gradle to a JDK ≤ 21 explicitly so Android builds are reproducible regardless of system `JAVA_HOME`.
+
+**Files:**
+- Modify: `frontend/android/gradle.properties`
+
+- [ ] **Step 1: Verify JDK 21 is installed**
+
+Run: `/usr/libexec/java_home -v 21 2>&1`
+Expected: prints a path like `/Library/Java/JavaVirtualMachines/temurin-21.jdk/Contents/Home`.
+
+If JDK 21 is not installed, run `brew install --cask temurin@21` first, then re-check.
+
+- [ ] **Step 2: Capture the path into a shell variable**
+
+```bash
+JAVA21=$(/usr/libexec/java_home -v 21)
+echo "$JAVA21"
+```
+
+- [ ] **Step 3: Append `org.gradle.java.home` to `frontend/android/gradle.properties`**
+
+Read the file first to see current content:
+
+```bash
+cat frontend/android/gradle.properties
+```
+
+Then append (do not overwrite — preserve existing Capacitor-managed entries):
+
+```bash
+echo "" >> frontend/android/gradle.properties
+echo "# Pin Gradle to JDK 21 (Java 25 incompatible with Gradle 8.14.x)" >> frontend/android/gradle.properties
+echo "org.gradle.java.home=$JAVA21" >> frontend/android/gradle.properties
+```
+
+- [ ] **Step 4: Verify Gradle now starts**
+
+```bash
+cd /Users/georgesand/IdeaProjects/remi/frontend/android
+./gradlew --version 2>&1 | head -10
+```
+
+Expected: prints Gradle version + `JVM: 21.x.x` lines. No "Unsupported class file major version" error.
+
+- [ ] **Step 5: Commit**
+
+```bash
+cd /Users/georgesand/IdeaProjects/remi
+git add frontend/android/gradle.properties
+git commit -m "chore(android): pin Gradle to JDK 21 (Java 25 unsupported by Gradle 8.14)"
+```
+
+---
+
 ## Phase B — Runtime URL resolver (TDD)
 
 ### Task B1: Create DI tokens
