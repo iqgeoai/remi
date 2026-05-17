@@ -1,0 +1,18 @@
+<ion-content class="ion-padding">
+  <h1>Resetare parolă</h1>
+  <app-error-banner [error]="error$ | async"></app-error-banner>
+  <div *ngIf="sent" class="success-banner">
+    Dacă emailul există, vei primi un link de resetare.
+    <a routerLink="/reset/confirm">Am primit linkul</a>
+  </div>
+  <form [formGroup]="form" (ngSubmit)="submit()" *ngIf="!sent">
+    <ion-list>
+      <ion-item>
+        <ion-label position="stacked">Email</ion-label>
+        <ion-input type="email" formControlName="email" required></ion-input>
+      </ion-item>
+    </ion-list>
+    <ion-button type="submit" expand="block" [disabled]="form.invalid">Trimite link</ion-button>
+  </form>
+  <p class="links"><a routerLink="/login">Înapoi la login</a></p>
+</ion-content>
