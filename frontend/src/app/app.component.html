@@ -1,3 +1,12 @@
 <ion-app>
+  <ion-header *ngIf="isAuthenticated$ | async">
+    <ion-toolbar color="primary">
+      <ion-title>Remi <small *ngIf="user$ | async as u">— {{ u.username }}</small></ion-title>
+      <ion-buttons slot="end">
+        <app-ws-indicator [state]="(wsState$ | async) ?? 'DISCONNECTED'"></app-ws-indicator>
+        <ion-button (click)="logout()" data-testid="logout-btn">Logout</ion-button>
+      </ion-buttons>
+    </ion-toolbar>
+  </ion-header>
   <ion-router-outlet></ion-router-outlet>
 </ion-app>
