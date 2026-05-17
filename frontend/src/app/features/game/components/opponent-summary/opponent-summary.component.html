@@ -1,0 +1,7 @@
+<div class="opp" [class.active]="active()" [class.etalat]="player().hasEtalat">
+  <div class="name">{{ player().name }}</div>
+  <div class="stats">
+    <span class="pieces">{{ player().handCount }} pcs</span>
+    <span class="score">{{ scoreLabel() }}</span>
+  </div>
+</div>

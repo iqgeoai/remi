@@ -1,0 +1,26 @@
+.opp {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 12px;
+  padding: 8px 10px;
+  min-width: 80px;
+  flex: 1;
+  position: relative;
+
+  &.active {
+    border-color: #d4a443;
+    box-shadow: 0 0 0 2px rgba(212,164,67,0.2);
+  }
+  &.etalat::after {
+    content: '●';
+    position: absolute;
+    top: 4px; right: 8px;
+    color: #6cbf6c;
+    font-size: 10px;
+  }
+
+  .name { font-size: 11px; opacity: 0.7; text-transform: uppercase; letter-spacing: 0.05em; }
+  .stats { display: flex; justify-content: space-between; margin-top: 2px; }
+  .pieces { font-size: 14px; font-weight: 600; }
+  .score { font-family: 'Playfair Display', serif; font-size: 16px; font-weight: 700; color: #d4a443; }
+}
