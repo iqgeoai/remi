@@ -1,0 +1,8 @@
+.melds-area {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 8px;
+  min-height: 80px;
+  .empty-hint { font-size: 12px; opacity: 0.5; font-style: italic; }
+}

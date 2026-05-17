@@ -1,0 +1,7 @@
+<div class="melds-area">
+  <p *ngIf="melds().length === 0" class="empty-hint">Nicio etalare încă.</p>
+  <app-meld-card *ngFor="let meld of melds(); let i = index"
+                 [meld]="meld" [meldIdx]="i"
+                 (layoffDropped)="layoffDropped.emit($event)">
+  </app-meld-card>
+</div>
