@@ -7,6 +7,7 @@ import { IonApp, IonRouterOutlet, IonHeader, IonToolbar, IonTitle, IonButton, Io
 import { Auth } from './store/auth/auth.actions';
 import { selectIsAuthenticated, selectUser } from './store/auth/auth.selectors';
 import { StompService } from './core/ws/stomp.service';
+import { AuthStorageService } from './core/auth/auth-storage.service';
 import { WsIndicatorComponent } from './shared/ws-indicator/ws-indicator.component';
 import { Observable } from 'rxjs';
 import { User } from './core/models';
@@ -27,12 +28,16 @@ export class AppComponent implements OnInit {
   private readonly store = inject(Store);
   private readonly router = inject(Router);
   private readonly stomp = inject(StompService);
+  private readonly authStorage = inject(AuthStorageService);
 
   readonly isAuthenticated$: Observable<boolean> = this.store.select(selectIsAuthenticated);
   readonly user$: Observable<User | null> = this.store.select(selectUser);
   readonly wsState$: Observable<WsConnectionState> = this.stomp.connectionState$;
 
-  ngOnInit(): void {
+  async ngOnInit(): Promise<void> {
+    // Reconcile tokens between native secure storage and localStorage
+    // (no-op on web when both empty) before kicking off bootstrap.
+    await this.authStorage.migrateLegacyToken();
     this.store.dispatch(Auth.bootstrapFromStorage());
   }
 

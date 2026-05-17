@@ -4,19 +4,25 @@ import { Subject } from 'rxjs';
 import { AppComponent } from './app.component';
 import { Auth } from './store/auth/auth.actions';
 import { StompService } from './core/ws/stomp.service';
+import { AuthStorageService } from './core/auth/auth-storage.service';
 import { provideRouter } from '@angular/router';
 
 describe('AppComponent', () => {
   let fixture: ComponentFixture<AppComponent>;
   let store: MockStore;
+  let authStorage: jasmine.SpyObj<AuthStorageService>;
 
   beforeEach(() => {
+    authStorage = jasmine.createSpyObj<AuthStorageService>('AuthStorageService',
+      ['migrateLegacyToken', 'getTokens', 'setTokens', 'clear']);
+    authStorage.migrateLegacyToken.and.resolveTo();
     TestBed.configureTestingModule({
       imports: [AppComponent],
       providers: [
         provideMockStore({ initialState: { auth: { user: null, tokens: null, status: 'anonymous', error: null, lastInvalidationReason: null } } }),
         provideRouter([]),
         { provide: StompService, useValue: { connectionState$: new Subject() } },
+        { provide: AuthStorageService, useValue: authStorage },
       ],
     });
     fixture = TestBed.createComponent(AppComponent);
@@ -24,8 +30,10 @@ describe('AppComponent', () => {
     spyOn(store, 'dispatch');
   });
 
-  it('dispatches bootstrapFromStorage on init', () => {
+  it('dispatches bootstrapFromStorage on init after migration', async () => {
     fixture.detectChanges();
+    await fixture.whenStable();
+    expect(authStorage.migrateLegacyToken).toHaveBeenCalled();
     expect(store.dispatch).toHaveBeenCalledWith(Auth.bootstrapFromStorage());
   });
 
