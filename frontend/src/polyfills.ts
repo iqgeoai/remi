@@ -53,3 +53,6 @@ import 'zone.js';  // Included with Angular CLI.
 /***************************************************************************************************
  * APPLICATION IMPORTS
  */
+
+// sockjs-client requires Node-style `global` to be defined in the browser.
+(window as any).global = window;
