@@ -1,0 +1,57 @@
+<ion-content class="ion-padding game-page">
+  <app-error-banner [error]="error()"></app-error-banner>
+
+  <ng-container *ngIf="view() as v">
+    <div class="header-row">
+      <app-opponents-bar
+        [players]="v.players"
+        [currentIdx]="v.current"
+        [mySeatIdx]="mySeatIdx()"
+        [totals]="v.totals">
+      </app-opponents-bar>
+      <app-turn-timer *ngIf="isMyTurn()" [secondsLeft]="secondsLeft()"></app-turn-timer>
+    </div>
+
+    <app-table-zone
+      [atu]="v.atu"
+      [stockCount]="v.stockCount"
+      [discard]="v.discard"
+      [melds]="v.melds"
+      [canDraw]="canDraw()"
+      [canTake]="canTake()"
+      (drawClicked)="draw()"
+      (takeRequested)="takeDiscard($event)"
+      (pieceDroppedToDiscard)="discardPiece($event)"
+      (layoffDropped)="layoff($event)">
+    </app-table-zone>
+
+    <ng-container *ngIf="myPlayer() as me">
+      <app-hand
+        [pieces]="me.hand"
+        [selectedIds]="selectedIds()"
+        [mustUsePieceId]="me.mustUsePieceId"
+        [connectedTo]="handListConnectedTo()"
+        (pieceClicked)="togglePiece($event)"
+        (reorder)="reorderHand($event)">
+      </app-hand>
+    </ng-container>
+
+    <app-action-bar
+      [canDraw]="canDraw()"
+      [selectedCount]="selectedIds().size"
+      [canEtalat]="canEtalat()"
+      [proposedMelds]="proposedMelds()"
+      [mustUseHint]="mustUseHint()"
+      (drawClicked)="draw()"
+      (addMeldClicked)="addMeld()"
+      (etalatClicked)="etalat()"
+      (cancelClicked)="cancel()">
+    </app-action-bar>
+  </ng-container>
+
+  <app-round-end-modal *ngIf="showRoundEnd() && roundEndResults().length > 0"
+    [results]="roundEndResults()"
+    [winnerName]="winnerName()"
+    (closeRequested)="closeRoundEnd()">
+  </app-round-end-modal>
+</ion-content>

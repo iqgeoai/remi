@@ -1,0 +1,12 @@
+.game-page {
+  --background: #1a0f08;
+  background: radial-gradient(ellipse at top, #3d2817 0%, #1a0f08 60%);
+  color: #f4e8d0;
+}
+.header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}

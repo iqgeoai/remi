@@ -20,6 +20,6 @@ export const routes: Routes = [
     ],
   },
   { path: 'game/:id', canActivate: [authGuard],
-    loadComponent: () => import('./features/game/game-debug.page') },
+    loadComponent: () => import('./features/game/game.page') },
   { path: '**', redirectTo: 'lobby' },
 ];
