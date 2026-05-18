@@ -3,6 +3,7 @@ import { Store } from '@ngrx/store';
 import { Subscription } from 'rxjs';
 import { StompService } from './stomp.service';
 import { FriendsActions } from '../../store/friends/friends.actions';
+import { Lobby } from '../../store/lobby/lobby.actions';
 
 interface PresenceMessage {
   userId: string;
@@ -15,6 +16,14 @@ interface FriendRequestMessage {
   requestId: number;
   fromUserId?: string;
   fromUsername?: string;
+}
+
+interface FriendInviteMessage {
+  type: 'friend-invite';
+  fromUserId: string;
+  fromUsername: string;
+  code: string;
+  matchId: string;
 }
 
 /**
@@ -55,6 +64,16 @@ export class FriendsWsBridge implements OnDestroy {
         } else if (msg.type === 'accepted') {
           this.store.dispatch(FriendsActions.friendRequestAccepted({ requestId: msg.requestId }));
           this.store.dispatch(FriendsActions.loadFriends());
+        }
+      }),
+    );
+    // /user/queue/invites — friend invites land here. We auto-join by dispatching
+    // the existing lobby join-by-code flow; the lobby effect navigates to /game/:id
+    // on success, so the invited user ends up in the match without manual input.
+    this.subs.push(
+      this.stomp.subscribe<FriendInviteMessage>('/user/queue/invites').subscribe(msg => {
+        if (msg.type === 'friend-invite' && msg.code) {
+          this.store.dispatch(Lobby.joinByCodeRequested({ joinCode: msg.code }));
         }
       }),
     );

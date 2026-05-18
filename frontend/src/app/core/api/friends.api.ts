@@ -9,6 +9,17 @@ interface RequestsResponse {
   outgoing: FriendRequest[];
 }
 
+export interface InviteSettings {
+  numPlayers?: number;
+  mode?: 'ETALAT' | 'TABLA';
+  difficulty?: 'EASY' | 'MED' | 'HARD';
+}
+
+export interface InviteResult {
+  code: string;
+  matchId: string;
+}
+
 @Injectable({ providedIn: 'root' })
 export class FriendsApi {
   private readonly http = inject(HttpClient);
@@ -59,5 +70,10 @@ export class FriendsApi {
     return firstValueFrom(
       this.http.delete<void>(`${this.base}/users/${userId}/block`),
     ).then(() => undefined);
+  }
+  invite(friendId: string, settings: InviteSettings = {}): Promise<InviteResult> {
+    return firstValueFrom(
+      this.http.post<InviteResult>(`${this.base}/friends/${friendId}/invite`, settings),
+    );
   }
 }

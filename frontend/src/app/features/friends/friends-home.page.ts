@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { Store } from '@ngrx/store';
 import {
   IonContent, IonHeader, IonToolbar, IonTitle, IonList, IonItem, IonLabel,
@@ -8,6 +8,7 @@ import {
 } from '@ionic/angular/standalone';
 import { FriendsActions } from '../../store/friends/friends.actions';
 import { friendsFeature } from '../../store/friends/friends.reducer';
+import { FriendsApi } from '../../core/api/friends.api';
 
 /**
  * Hub for the friends feature. Renders three nav items (search, requests,
@@ -53,6 +54,8 @@ import { friendsFeature } from '../../store/friends/friends.reducer';
 })
 export default class FriendsHomePage implements OnInit {
   private readonly store = inject(Store);
+  private readonly api = inject(FriendsApi);
+  private readonly router = inject(Router);
   readonly friends$ = this.store.select(friendsFeature.selectFriends);
   readonly incoming$ = this.store.select(friendsFeature.selectIncoming);
 
@@ -62,10 +65,13 @@ export default class FriendsHomePage implements OnInit {
   }
 
   /**
-   * Wired in Task F2 to POST /api/friends/{id}/invite. Stage 6 Phase E ships
-   * the page; the invite action remains a no-op placeholder until F2 lands.
+   * POST /api/friends/{id}/invite with default settings. The backend creates
+   * a private match owned by us (we are auto-seated) and pushes a WS invite
+   * to the friend. We navigate straight to the game route to wait for the
+   * friend to join via the WS deep link (handled by FriendsWsBridge).
    */
-  invite(_friendId: string): void {
-    // Implemented in Task F2.
+  async invite(friendId: string): Promise<void> {
+    const { matchId } = await this.api.invite(friendId);
+    await this.router.navigateByUrl(`/game/${matchId}`);
   }
 }
