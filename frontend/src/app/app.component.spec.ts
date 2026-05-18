@@ -4,6 +4,7 @@ import { Subject } from 'rxjs';
 import { AppComponent } from './app.component';
 import { Auth } from './store/auth/auth.actions';
 import { StompService } from './core/ws/stomp.service';
+import { FriendsWsBridge } from './core/ws/friends-ws.bridge';
 import { AuthStorageService } from './core/auth/auth-storage.service';
 import { DeepLinkService } from './core/deeplink/deep-link.service';
 import { provideRouter } from '@angular/router';
@@ -29,6 +30,7 @@ describe('AppComponent', () => {
         { provide: StompService, useValue: { connectionState$: new Subject() } },
         { provide: AuthStorageService, useValue: authStorage },
         { provide: DeepLinkService, useValue: deepLink },
+        { provide: FriendsWsBridge, useValue: { start: () => undefined } },
       ],
     });
     fixture = TestBed.createComponent(AppComponent);

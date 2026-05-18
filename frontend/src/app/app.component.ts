@@ -7,6 +7,7 @@ import { IonApp, IonRouterOutlet, IonHeader, IonToolbar, IonTitle, IonButton, Io
 import { Auth } from './store/auth/auth.actions';
 import { selectIsAuthenticated, selectUser } from './store/auth/auth.selectors';
 import { StompService } from './core/ws/stomp.service';
+import { FriendsWsBridge } from './core/ws/friends-ws.bridge';
 import { AuthStorageService } from './core/auth/auth-storage.service';
 import { DeepLinkService } from './core/deeplink/deep-link.service';
 import { WsIndicatorComponent } from './shared/ws-indicator/ws-indicator.component';
@@ -31,6 +32,7 @@ export class AppComponent implements OnInit {
   private readonly stomp = inject(StompService);
   private readonly authStorage = inject(AuthStorageService);
   private readonly deepLink = inject(DeepLinkService);
+  private readonly friendsBridge = inject(FriendsWsBridge);
 
   readonly isAuthenticated$: Observable<boolean> = this.store.select(selectIsAuthenticated);
   readonly user$: Observable<User | null> = this.store.select(selectUser);
@@ -43,6 +45,9 @@ export class AppComponent implements OnInit {
     // Register the `remi://` URL handler. Fire-and-forget: failure on web
     // (no native App plugin) is acceptable and surfaces only as a console log.
     void this.deepLink.init();
+    // Subscribe WS topics for friends/presence. Idempotent; safe to call
+    // pre-connect because StompService buffers subscriptions.
+    this.friendsBridge.start();
     this.store.dispatch(Auth.bootstrapFromStorage());
   }
 
