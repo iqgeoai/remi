@@ -24,7 +24,12 @@ export const routes: Routes = [
   {
     path: 'friends',
     canActivate: [authGuard],
-    loadComponent: () => import('./features/friends/friends-home.page'),
+    children: [
+      { path: '', loadComponent: () => import('./features/friends/friends-home.page') },
+      { path: 'search', loadComponent: () => import('./features/friends/friend-search.page') },
+      { path: 'requests', loadComponent: () => import('./features/friends/friend-requests.page') },
+      { path: 'blocked', loadComponent: () => import('./features/friends/blocked-list.page') },
+    ],
   },
   { path: '**', redirectTo: 'lobby' },
 ];
