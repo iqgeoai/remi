@@ -38,6 +38,9 @@ import { FriendsApi } from '../../core/api/friends.api';
         <ion-item button routerLink="/friends/blocked">
           <ion-label>Blocați</ion-label>
         </ion-item>
+        <ion-item button routerLink="/friends/dm">
+          <ion-label>Mesaje</ion-label>
+        </ion-item>
       </ion-list>
 
       <ion-list>

@@ -29,6 +29,8 @@ export const routes: Routes = [
       { path: 'search', loadComponent: () => import('./features/friends/friend-search.page') },
       { path: 'requests', loadComponent: () => import('./features/friends/friend-requests.page') },
       { path: 'blocked', loadComponent: () => import('./features/friends/blocked-list.page') },
+      { path: 'dm', loadComponent: () => import('./features/chat/dm-conversations.page') },
+      { path: 'dm/:otherUserId', loadComponent: () => import('./features/chat/dm-thread.page') },
     ],
   },
   { path: '**', redirectTo: 'lobby' },
