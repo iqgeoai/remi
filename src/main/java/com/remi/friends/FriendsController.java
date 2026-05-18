@@ -60,4 +60,18 @@ public class FriendsController {
         service.unfriend(userId, friendId);
         return ResponseEntity.noContent().build();
     }
+
+    /**
+     * Creates a private match owned by the caller and pushes a WS invite to
+     * {@code friendId}. The body is optional — missing fields fall back to
+     * 2-player ETALAT/MED. Returns {@code {code, matchId}} so the inviter can
+     * navigate to the waiting room while the friend follows the WS deep link.
+     */
+    @PostMapping("/{friendId}/invite")
+    public ResponseEntity<FriendsService.InviteResult> invite(
+            @AuthenticationPrincipal UUID userId,
+            @PathVariable UUID friendId,
+            @RequestBody(required = false) FriendsService.InviteSettings settings) {
+        return ResponseEntity.status(201).body(service.invite(userId, friendId, settings));
+    }
 }

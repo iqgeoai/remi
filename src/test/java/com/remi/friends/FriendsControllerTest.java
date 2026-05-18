@@ -177,6 +177,58 @@ class FriendsControllerTest {
     }
 
     @Test
+    void inviteCreatesPrivateMatchForAcceptedFriend() throws Exception {
+        Account alice = registerVerifyLogin("alice@example.com", "alice");
+        Account bob = registerVerifyLogin("bob@example.com", "bob");
+
+        // alice → bob friendship accepted
+        String sendBody = String.format("{\"addresseeId\":\"%s\"}", bob.id());
+        String sendResp = mvc.perform(post("/api/friends/requests")
+                .header("Authorization", "Bearer " + alice.jwt())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(sendBody))
+            .andExpect(status().isCreated())
+            .andReturn().getResponse().getContentAsString();
+        long requestId = om.readTree(sendResp).get("id").asLong();
+        mvc.perform(post("/api/friends/requests/" + requestId + "/accept")
+                .header("Authorization", "Bearer " + bob.jwt()))
+            .andExpect(status().isNoContent());
+
+        // alice invites bob with default settings (empty body)
+        String inviteResp = mvc.perform(post("/api/friends/" + bob.id() + "/invite")
+                .header("Authorization", "Bearer " + alice.jwt())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{}"))
+            .andExpect(status().isCreated())
+            .andExpect(jsonPath("$.code").isString())
+            .andExpect(jsonPath("$.matchId").isString())
+            .andReturn().getResponse().getContentAsString();
+
+        String code = om.readTree(inviteResp).get("code").asText();
+        UUID matchId = UUID.fromString(om.readTree(inviteResp).get("matchId").asText());
+        // Verify a private game row exists with that join code, owned by alice
+        UUID dbOwner = jdbc.queryForObject(
+            "SELECT owner_id FROM games WHERE id = ?", UUID.class, matchId);
+        String dbCode = jdbc.queryForObject(
+            "SELECT join_code FROM games WHERE id = ?", String.class, matchId);
+        assertThat(dbOwner).isEqualTo(alice.id());
+        assertThat(dbCode).isEqualTo(code);
+    }
+
+    @Test
+    void inviteRejectedWhenNotAcceptedFriend() throws Exception {
+        Account alice = registerVerifyLogin("alice@example.com", "alice");
+        Account bob = registerVerifyLogin("bob@example.com", "bob");
+
+        // No friendship at all → IllegalStateException → 5xx
+        mvc.perform(post("/api/friends/" + bob.id() + "/invite")
+                .header("Authorization", "Bearer " + alice.jwt())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{}"))
+            .andExpect(status().is5xxServerError());
+    }
+
+    @Test
     void unfriendRemovesRow() throws Exception {
         Account alice = registerVerifyLogin("alice@example.com", "alice");
         Account bob = registerVerifyLogin("bob@example.com", "bob");

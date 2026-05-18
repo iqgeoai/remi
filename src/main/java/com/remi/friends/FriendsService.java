@@ -1,5 +1,9 @@
 package com.remi.friends;
 
+import com.remi.engine.domain.Difficulty;
+import com.remi.engine.domain.Mode;
+import com.remi.lobby.domain.LobbyGame;
+import com.remi.lobby.service.LobbyService;
 import com.remi.user.persistence.UserRepository;
 import com.remi.user.persistence.UserEntity;
 import org.springframework.stereotype.Service;
@@ -15,19 +19,34 @@ public class FriendsService {
     private final UserRepository users;
     private final PresenceRegistry presence;
     private final FriendsBroadcaster broadcaster;
+    private final LobbyService lobby;
 
     public FriendsService(FriendshipRepository friendships, UserBlockRepository blocks,
-                          UserRepository users, PresenceRegistry presence, FriendsBroadcaster broadcaster) {
+                          UserRepository users, PresenceRegistry presence, FriendsBroadcaster broadcaster,
+                          LobbyService lobby) {
         this.friendships = friendships;
         this.blocks = blocks;
         this.users = users;
         this.presence = presence;
         this.broadcaster = broadcaster;
+        this.lobby = lobby;
     }
 
     public record FriendDto(UUID id, String username, boolean online, Instant since) {}
     public record RequestDto(Long id, UUID userId, String username, Instant createdAt) {}
     public record SearchHit(UUID id, String username) {}
+    public record InviteResult(String code, UUID matchId) {}
+
+    /**
+     * Settings the inviter passes for the private match they create when inviting
+     * a friend. All fields have safe defaults so the frontend can post an empty
+     * body and still get a sensible 2-player ETALAT/MED game.
+     */
+    public record InviteSettings(Integer numPlayers, Mode mode, Difficulty difficulty) {
+        public int numPlayersOrDefault() { return numPlayers != null ? numPlayers : 2; }
+        public Mode modeOrDefault() { return mode != null ? mode : Mode.ETALAT; }
+        public Difficulty difficultyOrDefault() { return difficulty != null ? difficulty : Difficulty.MED; }
+    }
 
     public List<FriendDto> listFriends(UUID userId) {
         return friendships.findAccepted(userId).stream()
@@ -122,5 +141,29 @@ public class FriendsService {
             .map(b -> users.findById(b.getBlockedId()).map(u -> new SearchHit(u.getId(), u.getUsername())))
             .flatMap(Optional::stream)
             .toList();
+    }
+
+    /**
+     * Creates a private match owned by {@code actorId} and pushes a WS invite
+     * to {@code friendId}. Requires an ACCEPTED friendship between the two —
+     * otherwise throws {@link IllegalStateException}. The inviter is auto-seated
+     * by {@link LobbyService#createPrivate}; the friend joins later via the
+     * returned code (typically through the WS push deep-link).
+     */
+    public InviteResult invite(UUID actorId, UUID friendId, InviteSettings settings) {
+        Friendship f = friendships.findBetween(actorId, friendId)
+            .orElseThrow(() -> new IllegalStateException("Not friends"));
+        if (f.getStatus() != FriendshipStatus.ACCEPTED) {
+            throw new IllegalStateException("Not friends");
+        }
+        InviteSettings s = settings != null ? settings : new InviteSettings(null, null, null);
+        LobbyGame game = lobby.createPrivate(
+            actorId,
+            s.numPlayersOrDefault(),
+            s.modeOrDefault(),
+            s.difficultyOrDefault());
+        String fromUsername = users.findById(actorId).map(UserEntity::getUsername).orElse("");
+        broadcaster.notifyFriendInvite(friendId, actorId, fromUsername, game.joinCode(), game.id());
+        return new InviteResult(game.joinCode(), game.id());
     }
 }
