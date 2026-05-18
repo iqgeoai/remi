@@ -1,14 +1,13 @@
-CREATE TYPE friendship_status AS ENUM ('PENDING', 'ACCEPTED', 'REJECTED', 'CANCELLED');
-
 CREATE TABLE friendships (
     id           BIGSERIAL PRIMARY KEY,
     requester_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     addressee_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    status       friendship_status NOT NULL DEFAULT 'PENDING',
+    status       VARCHAR(16) NOT NULL DEFAULT 'PENDING',
     created_at   TIMESTAMPTZ NOT NULL DEFAULT now(),
     accepted_at  TIMESTAMPTZ,
     CONSTRAINT friendships_distinct CHECK (requester_id <> addressee_id),
-    CONSTRAINT friendships_unique_pair UNIQUE (requester_id, addressee_id)
+    CONSTRAINT friendships_unique_pair UNIQUE (requester_id, addressee_id),
+    CONSTRAINT friendships_status_valid CHECK (status IN ('PENDING', 'ACCEPTED', 'REJECTED', 'CANCELLED'))
 );
 CREATE INDEX friendships_requester_idx ON friendships(requester_id);
 CREATE INDEX friendships_addressee_idx ON friendships(addressee_id);

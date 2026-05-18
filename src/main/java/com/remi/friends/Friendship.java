@@ -1,8 +1,6 @@
 package com.remi.friends;
 
 import jakarta.persistence.*;
-import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.type.SqlTypes;
 import java.time.Instant;
 import java.util.UUID;
 
@@ -19,8 +17,7 @@ public class Friendship {
     private UUID addresseeId;
 
     @Enumerated(EnumType.STRING)
-    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
-    @Column(nullable = false, columnDefinition = "friendship_status")
+    @Column(nullable = false, length = 16)
     private FriendshipStatus status = FriendshipStatus.PENDING;
 
     @Column(name = "created_at", nullable = false)
