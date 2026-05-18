@@ -14,11 +14,13 @@ import { authFeature } from './store/auth/auth.feature';
 import { lobbyFeature } from './store/lobby/lobby.reducer';
 import { matchFeature } from './store/match/match.reducer';
 import { gameFeature } from './store/game/game.reducer';
+import { friendsFeature } from './store/friends/friends.reducer';
 import { AuthEffects } from './store/auth/auth.effects';
 import { AuthWsEffects } from './store/auth/auth-ws.effects';
 import { LobbyEffects } from './store/lobby/lobby.effects';
 import { MatchEffects } from './store/match/match.effects';
 import { GameEffects } from './store/game/game.effects';
+import { FriendsEffects } from './store/friends/friends.effects';
 import { GlobalErrorHandler } from './shared/global-error-handler';
 import { provideApiUrls } from './core/config/api-url.provider';
 import { environment } from '../environments/environment';
@@ -36,8 +38,9 @@ export const appConfig: ApplicationConfig = {
       [lobbyFeature.name]: lobbyFeature.reducer,
       [matchFeature.name]: matchFeature.reducer,
       [gameFeature.name]: gameFeature.reducer,
+      [friendsFeature.name]: friendsFeature.reducer,
     }),
-    provideEffects(AuthEffects, AuthWsEffects, LobbyEffects, MatchEffects, GameEffects),
+    provideEffects(AuthEffects, AuthWsEffects, LobbyEffects, MatchEffects, GameEffects, FriendsEffects),
     provideStoreDevtools({ maxAge: 25, logOnly: environment.production }),
     { provide: ErrorHandler, useClass: GlobalErrorHandler },
     provideApiUrls(),
