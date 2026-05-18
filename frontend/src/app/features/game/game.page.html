@@ -54,4 +54,6 @@
     [winnerName]="winnerName()"
     (closeRequested)="closeRoundEnd()">
   </app-round-end-modal>
+
+  <app-match-chat-panel *ngIf="gameId" [matchId]="gameId"></app-match-chat-panel>
 </ion-content>

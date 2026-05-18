@@ -20,6 +20,7 @@ import { HandComponent } from './components/hand/hand.component';
 import { TurnTimerComponent } from './components/turn-timer/turn-timer.component';
 import { ActionBarComponent } from './components/action-bar/action-bar.component';
 import { RoundEndModalComponent, RoundResult } from './components/round-end-modal/round-end-modal.component';
+import { MatchChatPanelComponent } from '../chat/match-chat-panel.component';
 
 import { detectMeld } from './shared/meld-detection';
 
@@ -32,6 +33,7 @@ import { detectMeld } from './shared/meld-detection';
     ErrorBannerComponent,
     OpponentsBarComponent, TableZoneComponent, HandComponent,
     TurnTimerComponent, ActionBarComponent, RoundEndModalComponent,
+    MatchChatPanelComponent,
   ],
   templateUrl: './game.page.html',
   styleUrls: ['./game.page.scss'],
