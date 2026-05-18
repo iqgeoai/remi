@@ -4,3 +4,7 @@ frontend/www/
 frontend/.angular/
 frontend/dist/
 frontend/coverage/
+
+# Firebase / FCM secrets
+frontend/android/app/google-services.json
+frontend/ios/App/App/GoogleService-Info.plist

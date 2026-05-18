@@ -90,3 +90,34 @@ After each `cap:ios` / `cap:android` run, verify:
 | `The --target option is required` | Ionic CLI cannot auto-pick a simulator. Run `npm run cap:ios:targets` (or `cap:android:targets`) and pass `-- --target=<uuid>` |
 | `Multiple network interfaces detected` | Your Mac has more than one active IPv4 interface (Wi-Fi + VPN/Ethernet). The npm script handles this by passing `--public-host=$(ipconfig getifaddr en0)`. If en0 isn't your active interface, override: `npm run cap:ios -- --target=<uuid> --public-host=<your-lan-ip>` |
 | Backend exits with `Connection refused` to `localhost:5432` | Postgres isn't running. Start it: `brew services start postgresql@16` (or run the project's Docker compose stack if you use one). The dev profile requires a live Postgres on `localhost:5432`. |
+
+## Push Notifications (FCM) — setup needed before testing
+
+Push code is wired but disabled without Firebase credentials. To enable:
+
+1. Create a Firebase project at https://console.firebase.google.com
+2. Add an Android app with package name `ro.remi.app`. Download `google-services.json` → place at `frontend/android/app/google-services.json` (gitignored).
+3. Add an iOS app with bundle ID `ro.remi.app`. Download `GoogleService-Info.plist` → place at `frontend/ios/App/App/GoogleService-Info.plist` (gitignored).
+4. In Firebase console → Project Settings → Service accounts → "Generate new private key". Download the JSON file (keep secret).
+5. Export the env var before starting the backend:
+   ```bash
+   export GOOGLE_APPLICATION_CREDENTIALS=/path/to/firebase-service-account.json
+   mvn spring-boot:run -Dspring-boot.run.profiles=dev
+   ```
+6. For iOS push to actually deliver: enable APNs in Firebase console → Cloud Messaging → APNs Authentication Key (requires Apple Developer Program — Stage 5c). On simulators APNs is unavailable; physical device required.
+
+Until step 5 is done, backend logs "Firebase not initialized; would notify..." instead of sending.
+
+## Deep links
+
+Custom scheme `remi://` is registered on both platforms. Test from terminal:
+
+```bash
+# iOS Simulator
+xcrun simctl openurl booted "remi://match/abc123"
+
+# Android Emulator
+adb shell am start -a android.intent.action.VIEW -d "remi://match/abc123"
+```
+
+The app opens to `/game/abc123`.
