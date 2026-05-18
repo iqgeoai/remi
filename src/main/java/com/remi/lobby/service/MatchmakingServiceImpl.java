@@ -2,21 +2,28 @@ package com.remi.lobby.service;
 
 import com.remi.lobby.domain.LobbyGame;
 import com.remi.lobby.domain.MatchConfig;
+import com.remi.push.PushService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Service
 public class MatchmakingServiceImpl implements MatchmakingService {
+  private static final Logger log = LoggerFactory.getLogger(MatchmakingServiceImpl.class);
   private final LobbyService lobby;
   private final org.springframework.messaging.simp.SimpMessagingTemplate stomp;
+  private final PushService push;
   private final Map<MatchConfig, Deque<UUID>> queues = new ConcurrentHashMap<>();
   private final Set<UUID> queuedUsers = ConcurrentHashMap.newKeySet();
 
   public MatchmakingServiceImpl(LobbyService lobby,
-                                 org.springframework.messaging.simp.SimpMessagingTemplate stomp) {
+                                 org.springframework.messaging.simp.SimpMessagingTemplate stomp,
+                                 PushService push) {
     this.lobby = lobby;
     this.stomp = stomp;
+    this.push = push;
   }
 
   @Override
@@ -32,6 +39,12 @@ public class MatchmakingServiceImpl implements MatchmakingService {
         LobbyGame game = lobby.createPublicForUsers(picked, config.numPlayers(), config.mode(), config.difficulty());
         for (java.util.UUID uid : picked) {
           stomp.convertAndSendToUser(uid.toString(), "/queue/match", game);
+          try {
+            push.notify(uid, "Match găsit", "Adversarul tău așteaptă!",
+                Map.of("type", "match_found", "matchId", game.id().toString()));
+          } catch (Exception e) {
+            log.warn("Push notify (match_found) failed for user {}: {}", uid, e.getMessage());
+          }
         }
         return Optional.of(game);
       }
