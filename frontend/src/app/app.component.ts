@@ -8,6 +8,7 @@ import { Auth } from './store/auth/auth.actions';
 import { selectIsAuthenticated, selectUser } from './store/auth/auth.selectors';
 import { StompService } from './core/ws/stomp.service';
 import { AuthStorageService } from './core/auth/auth-storage.service';
+import { DeepLinkService } from './core/deeplink/deep-link.service';
 import { WsIndicatorComponent } from './shared/ws-indicator/ws-indicator.component';
 import { Observable } from 'rxjs';
 import { User } from './core/models';
@@ -29,6 +30,7 @@ export class AppComponent implements OnInit {
   private readonly router = inject(Router);
   private readonly stomp = inject(StompService);
   private readonly authStorage = inject(AuthStorageService);
+  private readonly deepLink = inject(DeepLinkService);
 
   readonly isAuthenticated$: Observable<boolean> = this.store.select(selectIsAuthenticated);
   readonly user$: Observable<User | null> = this.store.select(selectUser);
@@ -38,6 +40,9 @@ export class AppComponent implements OnInit {
     // Reconcile tokens between native secure storage and localStorage
     // (no-op on web when both empty) before kicking off bootstrap.
     await this.authStorage.migrateLegacyToken();
+    // Register the `remi://` URL handler. Fire-and-forget: failure on web
+    // (no native App plugin) is acceptable and surfaces only as a console log.
+    void this.deepLink.init();
     this.store.dispatch(Auth.bootstrapFromStorage());
   }
 
