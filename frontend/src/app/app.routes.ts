@@ -21,5 +21,10 @@ export const routes: Routes = [
   },
   { path: 'game/:id', canActivate: [authGuard],
     loadComponent: () => import('./features/game/game.page') },
+  {
+    path: 'friends',
+    canActivate: [authGuard],
+    loadComponent: () => import('./features/friends/friends-home.page'),
+  },
   { path: '**', redirectTo: 'lobby' },
 ];
