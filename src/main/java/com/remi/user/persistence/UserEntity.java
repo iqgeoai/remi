@@ -17,6 +17,7 @@ public class UserEntity {
   @Column(name = "username_normalized", nullable = false, unique = true) private String usernameNormalized;
   @Column(name = "password_hash", nullable = false, length = 60) private String passwordHash;
   @Column(name = "email_verified", nullable = false) private boolean emailVerified;
+  @Column(name = "rating", nullable = false) private int rating = 1000;
 
   @CreationTimestamp @Column(name = "created_at", nullable = false, updatable = false) private Instant createdAt;
   @UpdateTimestamp @Column(name = "updated_at", nullable = false) private Instant updatedAt;
@@ -39,9 +40,11 @@ public class UserEntity {
   public String getUsernameNormalized() { return usernameNormalized; }
   public String getPasswordHash() { return passwordHash; }
   public boolean isEmailVerified() { return emailVerified; }
+  public int getRating() { return rating; }
   public Instant getCreatedAt() { return createdAt; }
   public Instant getUpdatedAt() { return updatedAt; }
 
   public void setPasswordHash(String h) { this.passwordHash = h; }
   public void markEmailVerified() { this.emailVerified = true; }
+  public void setRating(int rating) { this.rating = rating; }
 }
