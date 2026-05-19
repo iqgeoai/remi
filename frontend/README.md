@@ -76,6 +76,27 @@ seconds left) is local to the GamePage component via signals.
 JWT stored in `localStorage` (Stage 4a); switches to Capacitor Preferences in Stage 5.
 WebSocket via STOMP+SockJS at `/ws` with `Authorization: Bearer <accessToken>` on CONNECT.
 
+## Chat (Stage 7)
+
+Two channels share one NgRx slice (`store/chat/`) and one REST/WS surface:
+
+- **Match chat** — floating drawer mounted on `GamePage` via
+  `MatchChatPanelComponent`. Loads history (`GET /api/chat/match/{id}`),
+  subscribes to `/topic/chat/match/{id}`, sends via
+  `POST /api/chat/match/{id}`.
+- **Direct messages** — `/friends/dm` lists conversations
+  (`GET /api/chat/dm/conversations`); `/friends/dm/:otherUserId` opens a
+  thread that loads `GET /api/chat/dm/{otherId}`, subscribes to
+  `/user/queue/dm/{otherId}`, sends via `POST /api/chat/dm/{otherId}`.
+
+`ChatWsBridge` is lazy: components call `subscribeMatch(id)` /
+`subscribeDm(otherId)` on init, and the bridge dedupes subscriptions so
+each topic is wired at most once for the session.
+
+Server enforces participation (match seats, friendship + not-blocked for
+DMs), a 10 msgs / 10s per-channel rate limit (429), and 500-char bodies.
+See `docs/superpowers/specs/2026-05-18-stage7-chat-design.md`.
+
 ## Running on mobile
 
 See [`docs/MOBILE_DEV.md`](../docs/MOBILE_DEV.md) for prereqs, first-time setup, daily workflow, and troubleshooting for iOS Simulator + Android Emulator targets.
