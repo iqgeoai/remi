@@ -21,6 +21,10 @@ export const routes: Routes = [
   },
   { path: 'game/:id', canActivate: [authGuard],
     loadComponent: () => import('./features/game/game.page') },
+  { path: 'profile/:id', canActivate: [authGuard],
+    loadComponent: () => import('./features/stats/profile.page').then(m => m.ProfilePage) },
+  { path: 'leaderboard', canActivate: [authGuard],
+    loadComponent: () => import('./features/stats/leaderboard.page').then(m => m.LeaderboardPage) },
   {
     path: 'friends',
     canActivate: [authGuard],

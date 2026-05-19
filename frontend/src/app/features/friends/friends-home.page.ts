@@ -44,12 +44,12 @@ import { FriendsApi } from '../../core/api/friends.api';
       </ion-list>
 
       <ion-list>
-        <ion-item *ngFor="let f of friends$ | async">
+        <ion-item button *ngFor="let f of friends$ | async" [routerLink]="['/profile', f.id]">
           <ion-label>
             <h2>{{ f.username }}</h2>
             <p>{{ f.online ? 'online' : 'offline' }}</p>
           </ion-label>
-          <ion-button slot="end" (click)="invite(f.id)">Invită</ion-button>
+          <ion-button slot="end" (click)="invite(f.id); $event.stopPropagation()">Invită</ion-button>
         </ion-item>
       </ion-list>
     </ion-content>

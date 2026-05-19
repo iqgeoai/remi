@@ -36,5 +36,19 @@
         <ion-card-subtitle>Vezi cine e online și invită-i la joc</ion-card-subtitle>
       </ion-card-header>
     </ion-card>
+
+    <ion-card button (click)="openMyStats()">
+      <ion-card-header>
+        <ion-card-title>Statistici</ion-card-title>
+        <ion-card-subtitle>Rating-ul tău și istoricul meciurilor</ion-card-subtitle>
+      </ion-card-header>
+    </ion-card>
+
+    <ion-card button routerLink="/leaderboard">
+      <ion-card-header>
+        <ion-card-title>Clasament</ion-card-title>
+        <ion-card-subtitle>Top 50 jucători după rating</ion-card-subtitle>
+      </ion-card-header>
+    </ion-card>
   </div>
 </ion-content>
