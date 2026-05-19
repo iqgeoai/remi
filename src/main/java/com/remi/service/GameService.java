@@ -21,15 +21,18 @@ public class GameService {
   private final com.remi.lobby.persistence.GamePlayerRepository playerSeats;
   private final com.remi.ws.broadcast.GameBroadcaster broadcaster;
   private final com.remi.lobby.service.GameTimerService timer;
+  private final com.remi.stats.MatchHistoryService matchHistoryService;
 
   public GameService(GameRepository repo,
                      com.remi.lobby.persistence.GamePlayerRepository playerSeats,
                      com.remi.ws.broadcast.GameBroadcaster broadcaster,
-                     com.remi.lobby.service.GameTimerService timer) {
+                     com.remi.lobby.service.GameTimerService timer,
+                     com.remi.stats.MatchHistoryService matchHistoryService) {
     this.repo = repo;
     this.playerSeats = playerSeats;
     this.broadcaster = broadcaster;
     this.timer = timer;
+    this.matchHistoryService = matchHistoryService;
   }
 
   @Transactional
@@ -66,6 +69,10 @@ public class GameService {
           timer.scheduleHardTimeout(gameId, currentIdx, () -> autoForceOnTimeout(gameId, currentIdx));
         }
         broadcaster.broadcastState(gameId, ns, a.events());
+        if (ns.closed()) {
+          java.time.Instant startedAt = entity.getCreatedAt() != null ? entity.getCreatedAt() : java.time.Instant.now();
+          matchHistoryService.recordEnd(gameId, ns, startedAt);
+        }
         yield ns;
       }
     };
@@ -89,6 +96,10 @@ public class GameService {
     }
     entity.setState(state);
     repo.save(entity);
+    if (state.closed()) {
+      java.time.Instant startedAt = entity.getCreatedAt() != null ? entity.getCreatedAt() : java.time.Instant.now();
+      matchHistoryService.recordEnd(gameId, state, startedAt);
+    }
     return state;
   }
 
