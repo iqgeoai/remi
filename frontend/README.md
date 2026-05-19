@@ -97,6 +97,32 @@ Server enforces participation (match seats, friendship + not-blocked for
 DMs), a 10 msgs / 10s per-channel rate limit (429), and 500-char bodies.
 See `docs/superpowers/specs/2026-05-18-stage7-chat-design.md`.
 
+## Stats / Rating (Stage 8)
+
+When a game ends, the server records a `match_history` row plus one
+`match_history_score` row per human seat, runs an ELO update (K=32,
+distributed across opponents in multi-player matches), and persists the
+new `users.rating`. Bot seats and games with fewer than 2 humans are
+skipped. The recording call is idempotent on `gameId`.
+
+Frontend slice lives at `store/stats/` (models + actions + reducer +
+effects), backed by `StatsApi`:
+
+- `GET /api/users/{id}/profile` → username, rating, totals, win-rate, last
+  20 matches with rank/score/Δrating.
+- `GET /api/users/me/stats` → same shape for the authenticated user.
+- `GET /api/leaderboard?limit=50` → top players ordered by rating.
+
+Two pages consume the slice. `ProfilePage` (`/profile/:id`) renders the
+header card + recent matches list; `LeaderboardPage` (`/leaderboard`)
+renders a numbered list where each row links back to that player's
+profile. Entry points: the lobby home exposes **Statistici** (deep-links
+to `/profile/<myUserId>` via the `selectUser` auth selector) and
+**Clasament** cards, and friend rows in `/friends` route to the friend's
+profile on tap (the Invită button stops propagation to preserve the
+existing invite flow). See
+`docs/superpowers/specs/2026-05-19-stage8-stats-rating-design.md`.
+
 ## Running on mobile
 
 See [`docs/MOBILE_DEV.md`](../docs/MOBILE_DEV.md) for prereqs, first-time setup, daily workflow, and troubleshooting for iOS Simulator + Android Emulator targets.
